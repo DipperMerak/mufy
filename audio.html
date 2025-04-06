@@ -1,0 +1,369 @@
+<!--音乐播放器+歌词动效 by.StarCrown-->
+<!--鸣谢：DeepSeek-->
+
+<body>
+  <!-- 音乐播放器 -->
+  <div class="audio-player">
+    <div class="player-stamp">留声机</div>
+    <div class="player-header">
+      <span class="player-title">音频档案</span>
+      <span class="player-time">00:00 / 00:00</span>
+    </div>
+    <audio id="mainAudio" src="http://music.163.com/song/media/outer/url?id=2648375886.mp3"></audio>
+    <div class="player-controls">
+      <button class="play-btn">▶</button>
+      <div class="progress-bar">
+        <div class="progress"></div>
+      </div>
+      <input type="range" class="volume" min="0" max="1" step="0.1" value="1">
+    </div>
+  </div>
+
+  <!-- 在播放器下方添加歌词容器 -->
+  <div class="lyrics-container">
+    <div class="lyrics-box"></div>
+  </div>
+</body>
+
+<style>
+  /* 音乐播放器样式 */
+  .audio-player {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    background: rgba(245, 230, 211, 0.9);
+    border: 12px solid transparent;
+    border-image: url('vintage-border.png') 30 round;
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 25px 30px;
+    position: relative;
+  }
+
+  .player-stamp {
+    position: absolute;
+    top: -15px;
+    left: -10px;
+    background: #8b7355;
+    color: #f5e6d3;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    transform: rotate(-5deg);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
+  .player-header {
+    border-bottom: 2px dashed #8b7355;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .player-title {
+    font-size: 1.4em;
+    color: #6b4f3a;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .player-time {
+    color: #8b7355;
+    font-size: 0.9em;
+  }
+
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .play-btn {
+    background: #8b7355;
+    color: #f5e6d3;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: transform 0.3s;
+  }
+
+  .play-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(139, 115, 85, 0.3);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: #8b7355;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  .volume {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 4px;
+    background: rgba(139, 115, 85, 0.3);
+  }
+
+  .volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #8b7355;
+    border-radius: 50%;
+  }
+
+  /* 统一纸质纹理 */
+  .audio-player::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(200, 180, 150, 0.1) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(200, 180, 150, 0.1) 2px, transparent 2px);
+    background-size: 20px 20px;
+    pointer-events: none;
+  }
+
+  /* 歌词显示样式 */
+  .lyrics-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    background: rgba(245, 230, 211, 0.9);
+    border-image: url('vintage-border.png') 30 round;
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 25px 30px;
+    position: relative;
+  }
+
+  .lyrics-box {
+    height: 150px;
+    overflow-y: auto;
+    line-height: 1.5;
+    color: #5a4a3e;
+    scroll-behavior: smooth;
+  }
+
+  .lyric-line {
+    padding: 8px 0;
+    transition: all 0.3s;
+    opacity: 0.6;
+  }
+
+  .lyric-line.active {
+    color: #8b7355;
+    font-weight: bold;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .english-lyric {
+    font-size: 1.1em;
+    display: block;
+  }
+
+  .chinese-lyric {
+    font-size: 0.9em;
+    display: block;
+    color: #6b4f3a;
+  }
+</style>
+
+<script>
+  // 音乐播放器功能
+  (function () {
+    const audio = document.getElementById('mainAudio');
+    const playBtn = document.querySelector('.play-btn');
+    const progress = document.querySelector('.progress');
+    const timeDisplay = document.querySelector('.player-time');
+    const volumeControl = document.querySelector('.volume');
+
+    // 播放/暂停
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        playBtn.textContent = '❚❚';
+      } else {
+        audio.pause();
+        playBtn.textContent = '▶';
+      }
+    });
+
+    // 进度条更新
+    audio.addEventListener('timeupdate', () => {
+      const progressPercent = (audio.currentTime / audio.duration) * 100;
+      progress.style.width = `${progressPercent}%`;
+
+      // 时间显示
+      const formatTime = (secs) => {
+        const minutes = Math.floor(secs / 60);
+        const seconds = Math.floor(secs % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      };
+
+      timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    });
+
+    // 点击进度条跳转
+    document.querySelector('.progress-bar').addEventListener('click', (e) => {
+      const rect = e.target.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pos * audio.duration;
+    });
+
+    // 音量控制
+    volumeControl.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+
+    // LRC解析器
+    function parseLRC(lrcText) {
+      const lines = lrcText.split('\n');
+      const result = [];
+
+      lines.forEach(line => {
+        const timeMatch = line.match(/\[(\d{2}):(\d{2}\.\d{2})\]/);
+        if (!timeMatch) return;
+
+        const [_, minutes, seconds] = timeMatch;
+        const time = parseFloat(minutes) * 60 + parseFloat(seconds);
+        const text = line.replace(timeMatch[0], '').trim();
+
+        if (text) {
+          const [english, chinese] = text.split('/').map(t => t.trim());
+          result.push({ time, english, chinese });
+        }
+      });
+
+      return result.sort((a, b) => a.time - b.time);
+    }
+
+    // 歌词同步功能
+    function setupLyrics(audioElement, lrcContent) {
+      const lyricsBox = document.querySelector('.lyrics-box');
+      const lyrics = parseLRC(lrcContent);
+
+      // 创建歌词DOM
+      lyrics.forEach((line, index) => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line';
+        div.innerHTML = `
+        <span class="english-lyric">${line.english}</span>
+        <span class="chinese-lyric">${line.chinese}</span>
+      `;
+        div.dataset.time = line.time;
+        lyricsBox.appendChild(div);
+      });
+
+      // 同步高亮
+      audioElement.addEventListener('timeupdate', () => {
+        const currentTime = audioElement.currentTime;
+        const lines = document.querySelectorAll('.lyric-line');
+
+        let activeIndex = -1;
+        lines.forEach((line, index) => {
+          const lineTime = parseFloat(line.dataset.time);
+          if (currentTime >= lineTime) activeIndex = index;
+        });
+
+        lines.forEach((line, index) => {
+          line.classList.toggle('active', index === activeIndex);
+        });
+
+        // 自动滚动
+        if (activeIndex > -1) {
+          const activeLine = lines[activeIndex];
+          const boxHeight = lyricsBox.clientHeight;
+          const lineTop = activeLine.offsetTop - lyricsBox.offsetTop;
+          lyricsBox.scrollTo({
+            top: lineTop - boxHeight / 2,
+            behavior: 'smooth'
+          });
+        }
+      });
+    }
+
+    // 初始化歌词（需要将LRC文件内容作为参数传入，双语歌词格式必须为"[时间]英文 / 中文"）
+    const lrcContent = `[00:00.00]作曲 : Keith Power / THE GREAT DESPAIR(绝望至极)
+    [00:00.01]Please stay / 请留下来
+    [00:02.93]Don't put out the frame and run away / 不要熄灭火焰并逃跑
+    [00:08.03]In this heart break / 在这心碎的时刻
+    [00:12.48]I'll be here fighting for you / 我会在这里为你而战
+    [00:14.41]With or without you / 无论有没有你
+    [00:19.28]Wide awake / 清醒
+    [00:21.76]With all the things I know that I should say / 带着我知道我应该说的所有事情
+    [00:27.94]I thought I could take / 我以为我能承受的
+    [00:31.17]More than I really can / 比我真正能承受的更多
+    [00:33.18]With or without you / 无论有没有你
+    [00:37.86]Baby'till you come back with something / 宝贝，直到你带着一些东西回来
+    [00:42.57]I know I'll never let it go / 我知道我永远不会放手
+    [00:46.91]I'm waiting but you come back with nothin' / 我在等待，但你却空手而归
+    [00:53.79]This obsession has turned / 这份执念已转变
+    [00:55.88]Into THE GREAT DESPAIR / 成为巨大的绝望
+    [00:58.41]I keep thinking I see you / 我总以为看到了你
+    [01:00.63]And there's nobody there / 然而那里没有人
+    [01:03.19]They say love is time / 他们说爱就是时间
+    [01:05.25]But all in love isn't fair / 但爱情并不都是公平的
+    [01:07.53]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
+    [01:13.23]Every day / 每一天
+    [01:15.75]I'm getting stronger / 我都在变得更坚强
+    [01:17.33]But I still feel the pain / 但我仍然感到痛苦
+    [01:21.42]Time will slow the way / 时间会指明道路
+    [01:25.07]And I'll mend the heart you've broken / 我会修补你破碎的心
+    [01:27.37]With or without you / 不管有没有你
+    [01:32.12]Baby'till you come back with something (untill you come back with somthing) / 宝贝，直到你带着一些东西回来（直到你带着一些东西回来）
+    [01:36.70]I know I'll never let it go (I know I'll never let it go) / 我知道我永远不会放手（我知道我永远不会放手）
+    [01:41.44]Your indifference lets you come back with nothin' (you come back with nothin') / 你的冷漠让你一无所获（你一无所获）
+    [01:47.88]This obsession has turned / 这份执念已转变
+    [01:49.88]Into THE GREAT DESPAIR / 成为巨大的绝望
+    [01:52.45]I keep thinking I see you / 我总以为看到了你
+    [01:54.65]And there's nobody there / 然而那里没有人
+    [01:57.17]They say love is time / 他们说爱就是时间
+    [01:59.41]But all in love isn't fair / 但爱情并不都是公平的
+    [02:01.58]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
+    [02:05.80]We watch the world burn down around us / 我们看着世界在周围烧毁
+    [02:11.44]But we're still standing here / 但我们仍然站在这里
+    [02:15.91]With a flicker of hope on the darkest of days / 在最黑暗的世界里带着一丝希望
+    [02:20.84]Now it feels like the end is near (feels like the end is near) / 现在感觉末日已近（感觉末日即将已近）
+    [02:25.59]The end (the end) of The Great Despair (Great Despair) / 结束（结束）巨大绝望（巨大绝望）
+    [02:35.21]This obsession has turned / 这份执念已转变
+    [02:37.01]Into THE GREAT DESPAIR / 成为巨大的绝望
+    [02:39.53]I keep thinking I see you / 我总以为看到了你
+    [02:44.51]This obsession has turned / 这份执念已转变
+    [02:46.53]Into THE GREAT DESPAIR / 成为巨大的绝望
+    [02:49.39]Now all I see is you / 现在我看到的就是你
+    [02:51.48]You're everywhere / 你无处不在
+    [02:53.95]They say love is time / 他们说爱就是时间
+    [02:56.07]And now it's time we declare / 现在该是我们宣布的时候了
+    [02:58.83]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
+    [03:00.84](Goodbye to THE GREAT DESPAIR) / （再见巨大的绝望）
+    [03:03.59]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
+    [03:08.12]Goodbye to THE GREAT DESPAIR / （再见巨大的绝望）
+  /* 这里放入完整的LRC文件内容 */`;
+
+    // 在DOM加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      const audio = document.getElementById('mainAudio');
+      setupLyrics(audio, lrcContent);
+    });
+  })();
+</script>
