@@ -4,14 +4,18 @@
 <body>
   <!-- 音乐播放器 -->
   <div class="audio-player">
-    <div class="player-stamp">留声机</div>
     <div class="player-header">
-      <span class="player-title">音频档案</span>
+      <!-- 给标题 span 添加 ID -->
+      <span class="player-title" id="player-title-display">歌曲标题 - 艺术家</span>
       <span class="player-time">00:00 / 00:00</span>
     </div>
-    <audio id="mainAudio" src="http://music.163.com/song/media/outer/url?id=2648375886.mp3"></audio>
+    <audio id="mainAudio" src=""></audio> <!-- 初始 src 可以为空，由 JS 加载 -->
     <div class="player-controls">
-      <button class="play-btn">▶</button>
+      <!-- 新增：上一首按钮 -->
+      <button class="prev-btn control-btn">«</button>
+      <button class="play-btn control-btn">▶</button>
+      <!-- 新增：下一首按钮 -->
+      <button class="next-btn control-btn">»</button>
       <div class="progress-bar">
         <div class="progress"></div>
       </div>
@@ -73,52 +77,82 @@
     font-size: 0.9em;
   }
 
-  .player-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
+      /* ... 其他样式保持不变 ... */
 
-  .play-btn {
-    background: #8b7355;
-    color: #f5e6d3;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2em;
-    transition: transform 0.3s;
-  }
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* 调整按钮间距 */
+    }
 
-  .play-btn:hover {
-    transform: scale(1.1);
-  }
+    /* 统一控制按钮样式 */
+    .control-btn {
+      background: #8b7355;
+      border: none;
+      width: 35px; /* 统一尺寸 */
+      height: 35px;
+      min-width: 35px;
+      min-height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1em; /* 调整字体大小以适应图标 */
+      color: #f5e6d3; /* 按钮图标颜色 */
+      transition: transform 0.2s, background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0; /* 移除内边距，确保图标居中 */
+      line-height: 1; /* 确保文字垂直居中 */
+    }
 
-  .progress-bar {
-    flex: 1;
-    height: 4px;
-    background: rgba(139, 115, 85, 0.3);
-    position: relative;
-    cursor: pointer;
-  }
+    .control-btn:hover {
+      transform: scale(1.1);
+      background-color: #a08563; /* 悬停时颜色变深一点 */
+    }
 
-  .progress {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background: #8b7355;
-    width: 0%;
-    transition: width 0.1s linear;
-  }
+    /* 单独调整播放按钮字体大小（如果需要） */
+    .play-btn {
+       font-size: 1.2em;
+    }
 
-  .volume {
-    -webkit-appearance: none;
-    width: 100px;
-    height: 4px;
-    background: rgba(139, 115, 85, 0.3);
-  }
+
+    .progress-bar {
+      flex: 1; /* 让进度条填充剩余空间 */
+      height: 4px;
+      background: rgba(139, 115, 85, 0.3);
+      position: relative;
+      cursor: pointer;
+      margin: 0 5px; /* 在进度条两侧添加一点边距 */
+    }
+
+    .volume {
+      -webkit-appearance: none;
+      width: 80px; /* 可以稍微缩小音量条 */
+      height: 4px;
+      background: rgba(139, 115, 85, 0.3);
+    }
+
+    /* ... 媒体查询中的按钮样式也可能需要微调 ... */
+    @media (max-width: 480px) {
+        .control-btn {
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
+            min-height: 30px;
+            font-size: 1em;
+        }
+        .play-btn {
+            font-size: 1.1em;
+        }
+        .player-controls {
+            gap: 8px;
+        }
+        .volume {
+            width: 60px;
+        }
+    }
+
+
 
   .volume::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -191,99 +225,150 @@
 <script>
   // 音乐播放器功能
   (function () {
+    // --- DOM Elements ---
     const audio = document.getElementById('mainAudio');
     const playBtn = document.querySelector('.play-btn');
+    const prevBtn = document.querySelector('.prev-btn'); // 新增
+    const nextBtn = document.querySelector('.next-btn'); // 新增
     const progress = document.querySelector('.progress');
+    const progressBar = document.querySelector('.progress-bar');
     const timeDisplay = document.querySelector('.player-time');
     const volumeControl = document.querySelector('.volume');
+    const lyricsBox = document.querySelector('.lyrics-box');
+    const playerTitleDisplay = document.getElementById('player-title-display'); // 新增
 
-    // 播放/暂停
-    playBtn.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play();
-        playBtn.textContent = '❚❚';
-      } else {
-        audio.pause();
-        playBtn.textContent = '▶';
-      }
-    });
+    // --- Song Data ---
+    const songs = [
+      {
+        title: "THE GREAT DESPAIR",
+        artist: "On-lyne",
+        src: "http://music.163.com/song/media/outer/url?id=2648375886.mp3",
+        lrc: `[00:00.00]作曲 : Keith Power / THE GREAT DESPAIR(绝望至极)
+        [00:00.01]Please stay / 请留下来
+        [00:02.93]Don't put out the frame and run away / 不要熄灭火焰并逃跑
+        [00:08.03]In this heart break / 在这心碎的时刻
+        [00:12.48]I'll be here fighting for you / 我会在这里为你而战
+        [00:14.41]With or without you / 无论有没有你
+        [00:19.28]Wide awake / 清醒
+        [00:21.76]With all the things I know that I should say / 带着我知道我应该说的所有事情
+        [00:27.94]I thought I could take / 我以为我能承受的
+        [00:31.17]More than I really can / 比我真正能承受的更多
+        [00:33.18]With or without you / 无论有没有你
+        [00:37.86]Baby'till you come back with something / 宝贝，直到你带着一些东西回来
+        [00:42.57]I know I'll never let it go / 我知道我永远不会放手
+        [00:46.91]I'm waiting but you come back with nothin' / 我在等待，但你却空手而归
+        [00:53.79]This obsession has turned / 这份执念已转变
+        [00:55.88]Into THE GREAT DESPAIR / 成为巨大的绝望
+        [00:58.41]I keep thinking I see you / 我总以为看到了你
+        [01:00.63]And there's nobody there / 然而那里没有人
+        [01:03.19]They say love is time / 他们说爱就是时间
+        [01:05.25]But all in love isn't fair / 但爱情并不都是公平的
+        [01:07.53]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
+        [01:13.23]Every day / 每一天
+        [01:15.75]I'm getting stronger / 我都在变得更坚强
+        [01:17.33]But I still feel the pain / 但我仍然感到痛苦
+        [01:21.42]Time will slow the way / 时间会指明道路
+        [01:25.07]And I'll mend the heart you've broken / 我会修补你破碎的心
+        [01:27.37]With or without you / 不管有没有你
+        [01:32.12]Baby'till you come back with something (untill you come back with somthing) / 宝贝，直到你带着一些东西回来（直到你带着一些东西回来）
+        [01:36.70]I know I'll never let it go (I know I'll never let it go) / 我知道我永远不会放手（我知道我永远不会放手）
+        [01:41.44]Your indifference lets you come back with nothin' (you come back with nothin') / 你的冷漠让你一无所获（你一无所获）
+        [01:47.88]This obsession has turned / 这份执念已转变
+        [01:49.88]Into THE GREAT DESPAIR / 成为巨大的绝望
+        [01:52.45]I keep thinking I see you / 我总以为看到了你
+        [01:54.65]And there's nobody there / 然而那里没有人
+        [01:57.17]They say love is time / 他们说爱就是时间
+        [01:59.41]But all in love isn't fair / 但爱情并不都是公平的
+        [02:01.58]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
+        [02:05.80]We watch the world burn down around us / 我们看着世界在周围烧毁
+        [02:11.44]But we're still standing here / 但我们仍然站在这里
+        [02:15.91]With a flicker of hope on the darkest of days / 在最黑暗的世界里带着一丝希望
+        [02:20.84]Now it feels like the end is near (feels like the end is near) / 现在感觉末日已近（感觉末日即将已近）
+        [02:25.59]The end (the end) of The Great Despair (Great Despair) / 结束（结束）巨大绝望（巨大绝望）
+        [02:35.21]This obsession has turned / 这份执念已转变
+        [02:37.01]Into THE GREAT DESPAIR / 成为巨大的绝望
+        [02:39.53]I keep thinking I see you / 我总以为看到了你
+        [02:44.51]This obsession has turned / 这份执念已转变
+        [02:46.53]Into THE GREAT DESPAIR / 成为巨大的绝望
+        [02:49.39]Now all I see is you / 现在我看到的就是你
+        [02:51.48]You're everywhere / 你无处不在
+        [02:53.95]They say love is time / 他们说爱就是时间
+        [02:56.07]And now it's time we declare / 现在该是我们宣布的时候了
+        [02:58.83]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
+        [03:00.84](Goodbye to THE GREAT DESPAIR) / （再见巨大的绝望）
+        [03:03.59]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
+        [03:08.12]Goodbye to THE GREAT DESPAIR / （再见巨大的绝望）` // 省略第一首歌词...
+      },
+      
+    ];
 
-    // 进度条更新
-    audio.addEventListener('timeupdate', () => {
-      const progressPercent = (audio.currentTime / audio.duration) * 100;
-      progress.style.width = `${progressPercent}%`;
-
-      // 时间显示
-      const formatTime = (secs) => {
-        const minutes = Math.floor(secs / 60);
-        const seconds = Math.floor(secs % 60);
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      };
-
-      timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-    });
-
-    // 点击进度条跳转
-    document.querySelector('.progress-bar').addEventListener('click', (e) => {
-      const rect = e.target.getBoundingClientRect();
-      const pos = (e.clientX - rect.left) / rect.width;
-      audio.currentTime = pos * audio.duration;
-    });
-
-    // 音量控制
-    volumeControl.addEventListener('input', (e) => {
-      audio.volume = e.target.value;
-    });
+    let currentSongIndex = 0; // 当前歌曲索引
+    let activeLyricUpdater = null; // 用于存储当前歌曲的歌词更新函数引用
 
     // LRC解析器
     function parseLRC(lrcText) {
+      if (!lrcText) return []; // 处理空歌词情况
       const lines = lrcText.split('\n');
       const result = [];
+      const timeRegex = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\]/; // 改进正则以匹配毫秒
 
       lines.forEach(line => {
-        const timeMatch = line.match(/\[(\d{2}):(\d{2}\.\d{2})\]/);
-        if (!timeMatch) return;
+        const matches = line.match(timeRegex);
+        if (matches) {
+          const minutes = parseInt(matches[1], 10);
+          const seconds = parseFloat(matches[2]);
+          const time = minutes * 60 + seconds;
+          const text = line.replace(timeRegex, '').trim();
 
-        const [_, minutes, seconds] = timeMatch;
-        const time = parseFloat(minutes) * 60 + parseFloat(seconds);
-        const text = line.replace(timeMatch[0], '').trim();
-
-        if (text) {
-          const [english, chinese] = text.split('/').map(t => t.trim());
-          result.push({ time, english, chinese });
+          if (text) {
+            // 尝试分割中英文，如果只有一个，则都用这个文本
+            const parts = text.split('/').map(t => t.trim());
+            const english = parts[0] || ''; // 如果没有英文部分则为空
+            const chinese = parts[1] || english; // 如果没有中文部分则用英文代替，或都为空
+            result.push({ time, english, chinese });
+          }
         }
       });
-
       return result.sort((a, b) => a.time - b.time);
     }
 
-    // 歌词同步功能
-    function setupLyrics(audioElement, lrcContent) {
-      const lyricsBox = document.querySelector('.lyrics-box');
+    // --- Lyrics Setup (修改为接受 lrc 内容并返回更新函数) ---
+    function setupLyrics(lrcContent) {
+      lyricsBox.innerHTML = ''; // 清空之前的歌词
       const lyrics = parseLRC(lrcContent);
 
-      // 创建歌词DOM
-      lyrics.forEach((line, index) => {
+      if (lyrics.length === 0) {
+        lyricsBox.innerHTML = '<div class="lyric-line" style="opacity: 0.6; text-align: center;">无歌词信息</div>';
+        return null; // 没有歌词，返回 null
+      }
+
+      // 创建歌词 DOM
+      lyrics.forEach((line) => {
         const div = document.createElement('div');
         div.className = 'lyric-line';
+        // 如果某部分歌词为空，则不显示对应的 span
         div.innerHTML = `
-        <span class="english-lyric">${line.english}</span>
-        <span class="chinese-lyric">${line.chinese}</span>
+        ${line.english ? `<span class="english-lyric">${line.english}</span>` : ''}
+        ${line.chinese ? `<span class="chinese-lyric">${line.chinese}</span>` : ''}
       `;
         div.dataset.time = line.time;
         lyricsBox.appendChild(div);
       });
 
-      // 同步高亮
-      audioElement.addEventListener('timeupdate', () => {
-        const currentTime = audioElement.currentTime;
-        const lines = document.querySelectorAll('.lyric-line');
+      // 返回一个用于 timeupdate 事件的函数
+      return () => {
+        const currentTime = audio.currentTime;
+        const lines = lyricsBox.querySelectorAll('.lyric-line');
+        if (lines.length === 0) return; // 如果没有歌词行，则退出
 
         let activeIndex = -1;
-        lines.forEach((line, index) => {
-          const lineTime = parseFloat(line.dataset.time);
-          if (currentTime >= lineTime) activeIndex = index;
-        });
+        for (let i = 0; i < lyrics.length; i++) {
+          if (currentTime >= lyrics[i].time) {
+            activeIndex = i;
+          } else {
+            break; // 因为歌词已排序，后续时间只会更大
+          }
+        }
 
         lines.forEach((line, index) => {
           line.classList.toggle('active', index === activeIndex);
@@ -292,78 +377,147 @@
         // 自动滚动
         if (activeIndex > -1) {
           const activeLine = lines[activeIndex];
-          const boxHeight = lyricsBox.clientHeight;
-          const lineTop = activeLine.offsetTop - lyricsBox.offsetTop;
-          lyricsBox.scrollTo({
-            top: lineTop - boxHeight / 2,
-            behavior: 'smooth'
-          });
+          if (activeLine) { // 确保 activeLine 存在
+            const boxHeight = lyricsBox.clientHeight;
+            const lineTop = activeLine.offsetTop - lyricsBox.offsetTop; // 相对于 lyricsBox 的顶部
+            const scrollTarget = lineTop - boxHeight / 2 + activeLine.clientHeight / 2; // 滚动到中间
+
+            lyricsBox.scrollTo({
+              top: Math.max(0, scrollTarget), // 避免滚动到负值
+              behavior: 'smooth'
+            });
+          }
+        } else {
+          // 如果没有激活的行（例如歌曲开始前），滚动到顶部
+          lyricsBox.scrollTo({ top: 0, behavior: 'smooth' });
         }
-      });
+      };
     }
 
-    // 初始化歌词（需要将LRC文件内容作为参数传入，双语歌词格式必须为"[时间]英文 / 中文"）
-    const lrcContent = `[00:00.00]作曲 : Keith Power / THE GREAT DESPAIR(绝望至极)
-    [00:00.01]Please stay / 请留下来
-    [00:02.93]Don't put out the frame and run away / 不要熄灭火焰并逃跑
-    [00:08.03]In this heart break / 在这心碎的时刻
-    [00:12.48]I'll be here fighting for you / 我会在这里为你而战
-    [00:14.41]With or without you / 无论有没有你
-    [00:19.28]Wide awake / 清醒
-    [00:21.76]With all the things I know that I should say / 带着我知道我应该说的所有事情
-    [00:27.94]I thought I could take / 我以为我能承受的
-    [00:31.17]More than I really can / 比我真正能承受的更多
-    [00:33.18]With or without you / 无论有没有你
-    [00:37.86]Baby'till you come back with something / 宝贝，直到你带着一些东西回来
-    [00:42.57]I know I'll never let it go / 我知道我永远不会放手
-    [00:46.91]I'm waiting but you come back with nothin' / 我在等待，但你却空手而归
-    [00:53.79]This obsession has turned / 这份执念已转变
-    [00:55.88]Into THE GREAT DESPAIR / 成为巨大的绝望
-    [00:58.41]I keep thinking I see you / 我总以为看到了你
-    [01:00.63]And there's nobody there / 然而那里没有人
-    [01:03.19]They say love is time / 他们说爱就是时间
-    [01:05.25]But all in love isn't fair / 但爱情并不都是公平的
-    [01:07.53]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
-    [01:13.23]Every day / 每一天
-    [01:15.75]I'm getting stronger / 我都在变得更坚强
-    [01:17.33]But I still feel the pain / 但我仍然感到痛苦
-    [01:21.42]Time will slow the way / 时间会指明道路
-    [01:25.07]And I'll mend the heart you've broken / 我会修补你破碎的心
-    [01:27.37]With or without you / 不管有没有你
-    [01:32.12]Baby'till you come back with something (untill you come back with somthing) / 宝贝，直到你带着一些东西回来（直到你带着一些东西回来）
-    [01:36.70]I know I'll never let it go (I know I'll never let it go) / 我知道我永远不会放手（我知道我永远不会放手）
-    [01:41.44]Your indifference lets you come back with nothin' (you come back with nothin') / 你的冷漠让你一无所获（你一无所获）
-    [01:47.88]This obsession has turned / 这份执念已转变
-    [01:49.88]Into THE GREAT DESPAIR / 成为巨大的绝望
-    [01:52.45]I keep thinking I see you / 我总以为看到了你
-    [01:54.65]And there's nobody there / 然而那里没有人
-    [01:57.17]They say love is time / 他们说爱就是时间
-    [01:59.41]But all in love isn't fair / 但爱情并不都是公平的
-    [02:01.58]So pull me out of THE GREAT DESPAIR / 所以把我从巨大的绝望中拉出来吧
-    [02:05.80]We watch the world burn down around us / 我们看着世界在周围烧毁
-    [02:11.44]But we're still standing here / 但我们仍然站在这里
-    [02:15.91]With a flicker of hope on the darkest of days / 在最黑暗的世界里带着一丝希望
-    [02:20.84]Now it feels like the end is near (feels like the end is near) / 现在感觉末日已近（感觉末日即将已近）
-    [02:25.59]The end (the end) of The Great Despair (Great Despair) / 结束（结束）巨大绝望（巨大绝望）
-    [02:35.21]This obsession has turned / 这份执念已转变
-    [02:37.01]Into THE GREAT DESPAIR / 成为巨大的绝望
-    [02:39.53]I keep thinking I see you / 我总以为看到了你
-    [02:44.51]This obsession has turned / 这份执念已转变
-    [02:46.53]Into THE GREAT DESPAIR / 成为巨大的绝望
-    [02:49.39]Now all I see is you / 现在我看到的就是你
-    [02:51.48]You're everywhere / 你无处不在
-    [02:53.95]They say love is time / 他们说爱就是时间
-    [02:56.07]And now it's time we declare / 现在该是我们宣布的时候了
-    [02:58.83]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
-    [03:00.84](Goodbye to THE GREAT DESPAIR) / （再见巨大的绝望）
-    [03:03.59]Goodbye to THE GREAT DESPAIR / 再见了，巨大的绝望
-    [03:08.12]Goodbye to THE GREAT DESPAIR / （再见巨大的绝望）
-  /* 这里放入完整的LRC文件内容 */`;
+    // --- Load Song Function (新增) ---
+    function loadSong(index) {
+      const song = songs[index];
+      if (!song) {
+        console.error("歌曲索引无效:", index);
+        return;
+      }
+      playerTitleDisplay.textContent = `${song.title} - ${song.artist}`;
+      audio.src = song.src;
+      progress.style.width = '0%'; // 重置进度条
+      timeDisplay.textContent = '0:00 / 0:00'; // 重置时间显示
 
-    // 在DOM加载完成后初始化
-    document.addEventListener('DOMContentLoaded', () => {
-      const audio = document.getElementById('mainAudio');
-      setupLyrics(audio, lrcContent);
+      // 移除旧的歌词更新监听器（如果存在）
+      if (activeLyricUpdater) {
+        audio.removeEventListener('timeupdate', activeLyricUpdater);
+      }
+
+      // 设置新的歌词并获取更新函数
+      activeLyricUpdater = setupLyrics(song.lrc);
+
+      // 如果成功获取了更新函数，则添加到 timeupdate 事件
+      if (activeLyricUpdater) {
+        audio.addEventListener('timeupdate', activeLyricUpdater);
+      }
+
+      // 加载音频元数据后更新总时长
+      audio.addEventListener('loadedmetadata', () => {
+        updateTotalTime();
+      }, { once: true }); // 确保只监听一次，避免重复添加
+
+      // 如果之前是播放状态，可以考虑加载完后自动播放
+      // if (!audio.paused) {
+      //   audio.play().catch(e => console.error("自动播放失败:", e));
+      // } else {
+      playBtn.textContent = '▶'; // 确保按钮是播放状态
+      // }
+    }
+
+    // --- Player Controls ---
+    function playSong() {
+      audio.play().catch(e => console.error("播放失败:", e));
+      playBtn.textContent = '❚❚';
+    }
+
+    function pauseSong() {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+
+    function prevSong() {
+      currentSongIndex--;
+      if (currentSongIndex < 0) {
+        currentSongIndex = songs.length - 1;
+      }
+      loadSong(currentSongIndex);
+      playSong(); // 切换后自动播放
+    }
+
+    function nextSong() {
+      currentSongIndex++;
+      if (currentSongIndex >= songs.length) {
+        currentSongIndex = 0;
+      }
+      loadSong(currentSongIndex);
+      playSong(); // 切换后自动播放
+    }
+
+    // --- Update Progress/Time ---
+    function formatTime(secs) {
+      if (isNaN(secs)) return '0:00'; // 处理 NaN 情况
+      const minutes = Math.floor(secs / 60);
+      const seconds = Math.floor(secs % 60);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateTotalTime() {
+      if (audio.duration) {
+        timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+      }
+    }
+
+    function updateProgress() {
+      if (audio.duration) {
+        const progressPercent = (audio.currentTime / audio.duration) * 100;
+        progress.style.width = `${progressPercent}%`;
+        updateTotalTime(); // 在更新进度时也更新时间显示
+      }
+    }
+
+    function setProgress(e) {
+      const width = this.clientWidth; // 使用 this 获取 progressBar 宽度
+      const clickX = e.offsetX;
+      if (audio.duration) {
+        audio.currentTime = (clickX / width) * audio.duration;
+      }
+    }
+
+    // --- Event Listeners ---
+    playBtn.addEventListener('click', () => {
+      const isPlaying = playBtn.textContent === '❚❚';
+      if (isPlaying) {
+        pauseSong();
+      } else {
+        playSong();
+      }
     });
+
+    prevBtn.addEventListener('click', prevSong);
+    nextBtn.addEventListener('click', nextSong);
+
+    // 更新进度条和时间
+    audio.addEventListener('timeupdate', updateProgress);
+    // 歌曲结束后自动播放下一首
+    audio.addEventListener('ended', nextSong);
+
+    // 点击进度条跳转
+    progressBar.addEventListener('click', setProgress);
+
+    // 音量控制
+    volumeControl.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+
+    // --- Initial Song Load ---
+    loadSong(currentSongIndex); // 在 DOM 加载后加载第一首歌
   })();
 </script>

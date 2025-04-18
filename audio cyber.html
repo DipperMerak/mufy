@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛博朋克音乐播放器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --cp-bg-dark: #0a0f25;
+      /* 深蓝紫背景 */
+      --cp-bg-medium: #1a1f3a;
+      --cp-neon-cyan: #00f0ff;
+      --cp-neon-magenta: #ff00ff;
+      --cp-text-primary: #e0e0ff;
+      --cp-text-secondary: #a0a0cc;
+      --cp-border-color: rgba(0, 240, 255, 0.3);
+      /* 青色边框 */
+      --cp-glow-cyan: 0 0 15px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.7);
+      --cp-glow-magenta: 0 0 15px rgba(255, 0, 255, 0.5), 0 0 5px rgba(255, 0, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+      background-color: var(--cp-bg-dark);
+      color: var(--cp-text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .cyber-player {
+      width: 100%;
+      max-width: 450px;
+      /* 控制播放器最大宽度 */
+      background: linear-gradient(145deg, var(--cp-bg-medium), #101530);
+      border: 1px solid var(--cp-border-color);
+      border-radius: 8px;
+      padding: 25px;
+      box-shadow: var(--cp-glow-cyan), inset 0 0 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      /* 隐藏可能溢出的辉光 */
+    }
+
+    /* 装饰性线条 */
+    .cyber-player::before,
+    .cyber-player::after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      background: var(--cp-neon-cyan);
+      box-shadow: var(--cp-glow-cyan);
+      opacity: 0.6;
+    }
+
+    .cyber-player::before {
+      top: 10px;
+      left: 10px;
+      width: 50px;
+    }
+
+    .cyber-player::after {
+      bottom: 10px;
+      right: 10px;
+      width: 50px;
+    }
+
+    .song-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .song-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: var(--cp-neon-magenta);
+      text-shadow: var(--cp-glow-magenta);
+      margin-bottom: 5px;
+      letter-spacing: 1px;
+    }
+
+    .song-artist {
+      font-size: 0.9em;
+      color: var(--cp-text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      /* 控制按钮间距 */
+      margin-bottom: 15px;
+    }
+
+    .control-button {
+      background: transparent;
+      border: 1px solid var(--cp-neon-cyan);
+      color: var(--cp-neon-cyan);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      /* 调整图标大小 */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: var(--cp-glow-cyan);
+      text-shadow: 0 0 5px var(--cp-neon-cyan);
+      line-height: 1;
+    }
+
+    .control-button:hover {
+      background-color: rgba(0, 240, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.7), 0 0 10px rgba(0, 240, 255, 0.9);
+      transform: scale(1.05);
+    }
+
+    .control-button:active {
+      transform: scale(0.95);
+    }
+
+    .play-pause-btn {
+      width: 55px;
+      /* 播放按钮稍大 */
+      height: 55px;
+      font-size: 1.8em;
+      border-color: var(--cp-neon-magenta);
+      color: var(--cp-neon-magenta);
+      box-shadow: var(--cp-glow-magenta);
+      text-shadow: 0 0 5px var(--cp-neon-magenta);
+    }
+
+    .play-pause-btn:hover {
+      background-color: rgba(255, 0, 255, 0.1);
+      box-shadow: 0 0 25px rgba(255, 0, 255, 0.7), 0 0 10px rgba(255, 0, 255, 0.9);
+    }
+
+
+    .progress-volume-area {
+      margin-bottom: 20px;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8em;
+      color: var(--cp-text-secondary);
+      margin-bottom: 5px;
+      padding: 0 5px;
+      /* 左右留白 */
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      overflow: hidden;
+      /* 隐藏进度条溢出 */
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cp-neon-magenta), var(--cp-neon-cyan));
+      border-radius: 3px;
+      transition: width 0.1s linear;
+      /* 平滑过渡 */
+      box-shadow: inset 0 0 5px rgba(0, 240, 255, 0.5);
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      /* 音量放右边 */
+      margin-top: 15px;
+      gap: 8px;
+    }
+
+    .volume-icon {
+      color: var(--cp-text-secondary);
+      font-size: 1em;
+      /* 可以用 SVG 或字体图标代替 */
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100px;
+      /* 音量条宽度 */
+      height: 4px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 2px;
+      cursor: pointer;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+    /* Webkit (Chrome, Safari) */
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--cp-neon-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: var(--cp-glow-cyan);
+      margin-top: -4px;
+      /* 垂直居中补偿 */
+    }
+
+    /* Firefox */
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: var(--cp-neon-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      /* Firefox 默认可能有边框 */
+      box-shadow: var(--cp-glow-cyan);
+    }
+
+    .volume-slider::-moz-range-track {
+      background: rgba(0, 0, 0, 0.4);
+      height: 4px;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+
+    .lyrics-container {
+      height: 150px;
+      /* 固定歌词区域高度 */
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--cp-border-color);
+      border-radius: 4px;
+      padding: 15px;
+      overflow-y: auto;
+      /* 超出高度则滚动 */
+      scroll-behavior: smooth;
+      /* 平滑滚动 */
+      text-align: center;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 自定义滚动条 (可选, Webkit) */
+    .lyrics-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .lyrics-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    .lyrics-container::-webkit-scrollbar-thumb {
+      background-color: var(--cp-neon-cyan);
+      border-radius: 3px;
+      box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .lyric-line {
+      padding: 8px 0;
+      font-size: 0.95em;
+      color: var(--cp-text-secondary);
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      line-height: 1.5;
+    }
+
+    .lyric-jpn,
+    .lyric-chn {
+        display: block; /* 让每种语言占一行 */
+        transition: color 0.3s ease; /* 平滑颜色过渡 */
+    }
+
+    .lyric-jpn {
+        font-size: 0.9em; /* 日语可以稍小一点 */
+        color: var(--cp-text-secondary); /* 非激活时次要颜色 */
+        opacity: 0.7;
+    }
+
+    .lyric-chn {
+        font-size: 1em; /* 中文正常大小 */
+        color: var(--cp-text-primary); /* 非激活时主要颜色 */
+        opacity: 0.8;
+    }
+
+    /* 激活行的样式 */
+    .lyric-line.active .lyric-jpn {
+        color: var(--cp-neon-magenta); /* 激活时用高亮色 */
+        opacity: 1;
+        font-weight: bold; /* 可以加粗 */
+        text-shadow: 0 0 5px var(--cp-neon-magenta);
+    }
+    .lyric-line.active .lyric-chn {
+        color: var(--cp-neon-cyan); /* 激活时用另一种高亮色 */
+        opacity: 1;
+        font-weight: bold;
+        text-shadow: 0 0 5px var(--cp-neon-cyan);
+    }
+
+    /* 调整激活行的整体缩放和位置（如果需要） */
+    .lyric-line.active {
+        transform: scale(1.03); /* 稍微放大激活行 */
+    }
+
+    /* 响应式调整 (可选) */
+    @media (max-width: 480px) {
+        .lyric-jpn {
+            font-size: 0.85em;
+        }
+        .lyric-chn {
+            font-size: 0.95em;
+        }
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 480px) {
+      .cyber-player {
+        padding: 15px;
+      }
+
+      .song-title {
+        font-size: 1.1em;
+      }
+
+      .control-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.3em;
+      }
+
+      .play-pause-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.6em;
+      }
+
+      .controls {
+        gap: 15px;
+      }
+
+      .lyrics-container {
+        height: 120px;
+        padding: 10px;
+      }
+
+      .lyric-line {
+        font-size: 0.9em;
+        padding: 6px 0;
+      }
+
+      .volume-slider {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="cyber-player">
+    <audio id="audio-player" src=""></audio> <!-- 音频元素 -->
+
+    <div class="song-info">
+      <div class="song-title" id="song-title">歌曲标题</div>
+      <div class="song-artist" id="song-artist">艺术家</div>
+    </div>
+
+    <div class="controls">
+      <button class="control-button prev-btn" aria-label="上一首">«</button>
+      <button class="control-button play-pause-btn" aria-label="播放/暂停">▶</button>
+      <button class="control-button next-btn" aria-label="下一首">»</button>
+    </div>
+
+    <div class="progress-volume-area">
+      <div class="time-display">
+        <span id="current-time">0:00</span>
+        <span id="total-time">0:00</span>
+      </div>
+      <div class="progress-container" id="progress-container">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="volume-control">
+        <span class="volume-icon">🔊</span> <!-- 简单音量图标 -->
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1"
+          aria-label="音量">
+      </div>
+    </div>
+
+    <div class="lyrics-container" id="lyrics-container">
+      <!-- 歌词将由 JS 动态加载 -->
+      <div class="lyric-line" style="opacity: 0.5;">加载歌词中...</div>
+    </div>
+  </div>
+
+  <script>
+    // --- DOM Elements ---
+    const audio = document.getElementById('audio-player');
+    const playPauseBtn = document.querySelector('.play-pause-btn');
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    const progressFill = document.getElementById('progress-fill');
+    const progressContainer = document.getElementById('progress-container');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalTimeEl = document.getElementById('total-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const lyricsContainer = document.getElementById('lyrics-container');
+    const songTitleEl = document.getElementById('song-title');
+    const songArtistEl = document.getElementById('song-artist');
+
+    // --- Song Data (示例 - 使用新格式) ---
+    const songs = [
+      {
+        title: "化身の獣", // 歌曲
+        artist: "Do As Infinity",
+        // 替换为你实际的音频文件 URL
+        src: "https://dlink.host/musics/aHR0cHM6Ly9vbmVkcnYtbXkuc2hhcmVwb2ludC5jb20vOnU6L2cvcGVyc29uYWwvc3Rvcl9vbmVkcnZfb25taWNyb3NvZnRfY29tL0VYSHNyZzNwZXBCTmduSzhwanhYZHdFQlFtZHhYcFZCTXJmUTBLX3NnSEp6LUE.mp3", // 请替换
+        // 替换为你实际的 LRC 歌词内容 (双语格式)
+        lrc: `[00:00.00]作词 : 伴都美子
+          [00:01.00]作曲 : 澤野弘之
+          [00:19.97]
+          [00:22.30]右隣の刃(やいば)を 撫でてる / 轻抚右手旁的剑刃
+          [00:27.40]我は何者か 何者だろうか / 我是谁 究竟是谁
+          [00:33.13]左に見据えた 未来に今 / 如今左侧是已看清的未来
+          [00:38.40]覚悟して挑む 荊道(いばらみち) とて / 下定决心挑战 踏入荆棘之路
+          [00:43.67]
+          [00:44.10]己の生き様さ / 这就是我的生存之道
+          [00:53.48]
+          [00:54.24]邪気足掻(じゃきあが)きの果て お前が見せた形相 / 伴着邪气挣扎的结局 是你伪装出的表象
+          [00:59.80]散り際の戯言 最期に一撃 くらわせる / 临终之际的戏言 让我蒙受最终一击
+          [01:05.31]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [01:10.68]求め喘ぐだけの ただの化獣だった / 只不过是刻意喘息着的 化身之兽
+          [01:16.57]
+          [01:17.03]再三 裏切り 愛に背き / 在爱的背后 是你反复地背叛
+          [01:21.90]満足気な笑み 品もありゃしない / 一脸满足的笑容 没有任何品性可言
+          [01:27.47]うつつを抜かした その代償 / 对这样的爱神魂颠倒 所承受的代价就是
+          [01:32.79]浮世の最果て 孤独な末裔(まつえい) / 在浮世的尽头 只剩下孤独的后裔
+          [01:38.16]
+          [01:38.68]お前の生き様さ / 这就是你的生存之道
+          [01:48.11]
+          [01:49.04]化けの皮剥がし お前が晒した本性 / 剥下那身羊皮 露出你的本性
+          [01:54.36]絆(ほだ)された身はただ 行くあてもなく彷徨う / 被束缚的身躯 只是没有目的地彷徨着
+          [01:59.86]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [02:05.26]牙を隠していた ただの化獣だった / 只不过是隐藏了獠牙的 化身之兽
+          [02:11.05]
+          [02:11.47]嗚呼、この世は / Ah… 浮世之间
+          [02:15.56]嗚呼、欲ばかり / Ah… 物欲横流
+          [02:21.16]
+          [02:33.82]嗚呼、 / Ah…
+          [02:35.45]化けの皮剥がし お前が晒した本性 / 剥下那身羊皮 露出你的本性
+          [02:40.65]絆(ほだ)された身はただ 行くあてもなく彷徨う / 被束缚的身躯 只是没有目的地彷徨着
+          [02:46.12]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [02:51.61]牙を隠していた ただの化獣だった / 只不过是隐藏了獠牙的 化身之兽
+          [02:57.39]
+          [02:57.80]嗚呼、この世は / Ah… 浮世之间
+          [03:01.79]嗚呼、欲ばかり / Ah… 物欲横流
+          [03:07.39]
+          ` // 歌词示例，请替换
+      },
+      {
+        title: "名前のない怪物", // 示例歌曲
+        artist: "EGOIST",
+        src: "https://dlink.host/musics/aHR0cHM6Ly9vbmVkcnYtbXkuc2hhcmVwb2ludC5jb20vOnU6L2cvcGVyc29uYWwvc3Rvcl9vbmVkcnZfb25taWNyb3NvZnRfY29tL0VmazNBLVgwazZsSmphdlRzNUYzdnZBQmJlQVlwSFoxWmNheVBCakRfTUQ5WFE.mp3", // 请替换
+        lrc: `[00:00.00]作词 : ryo (supercell)
+          [00:01.00]作曲 : ryo (supercell)
+          [00:25.66]
+          [00:26.66]御伽話(フェアリーテイル)は / 童话故事
+          [00:32.01]さっき死んだみたい / 刚才如同死寂般
+          [00:37.41]煉瓦の病棟で / 在砖砌的病房里
+          [00:42.66]うまく歌えなくて / 嘶哑地哼着歌
+          [00:46.64]
+          [00:48.13]霧に煙る夜 / 浮现在烟雾弥漫的夜里
+          [00:53.43]浮かべ赤い月 / 腥红的月亮
+          [00:58.63]ほらみて私を / 看着我
+          [01:04.02]目を逸らさないで / 眼神不要逃开
+          [01:07.99]
+          [01:09.92]黒い鉄格子の中で / 黑色的铁盒子中
+          [01:12.84]私は生まれてきたんだ / 我如此诞生了
+          [01:15.40]悪意の代償を願え / 用恶意的代价来完成愿望
+          [01:17.78]望むがままにお前に / 就像你所希望的那样
+          [01:21.06]さあ与えよう正義を / 来吧，都给与你
+          [01:23.45]壊して壊される前に / 在正义崩坏之前
+          [01:26.16]因果の代償を払い / 去偿还因果的代价
+          [01:28.56]共に行こう / 一起同行
+          [01:29.73]名前のない怪物 / 没有名字的怪物
+          [01:37.06]
+          [01:45.75]
+          [01:46.75]耳鳴りがしてる / 铁丝网的声音
+          [01:52.01]鉄条網うるさくって / 在耳中嗡嗡作响
+          [01:57.32]思い出せないの / 想不起来吗
+          [02:02.65]あの日の旋律 / 那天的旋律
+          [02:06.53]
+          [02:08.02]雨はまだ止まない / 雨还未停
+          [02:13.25]何にも見えないの / 什么也看不见吗
+          [02:18.50]ほらみてこんなに / 可是你看
+          [02:24.00]大きくなったの / 不是已经变得如此巨大了吗
+          [02:27.96]
+          [02:30.03]黒い雨降らせこの空 / 天空降下黑色的雨滴
+          [02:32.80]私は望まれないもの / 我是不被寄望之物
+          [02:35.51]ひび割れたノイローゼ / 破碎不堪的神经官能
+          [02:37.54]愛す同罪の傍観者達に / 与被爱同罪的旁观者们
+          [02:41.01]さあ今ふるえ正義を / 来吧，让正义振作起来
+          [02:43.43]消せない傷を抱きしめて / 坦率面对这不会消失的疤痕
+          [02:46.09]この身体を受け入れ / 接受这副躯壳
+          [02:48.50]共に行こう / 一起同行
+          [02:49.71]名前のない怪物 / 没有名字的怪物
+          [02:56.22]
+          [03:11.95]
+          [03:12.95]ああ / 啊
+          [03:15.49]神ハ告ゲル / 神明宣告着
+          [03:25.37]真ノ世界ヲ / 这个真实的世界
+          [03:34.54]
+          [03:54.57]
+          [03:55.57]黒い鉄格子の中で / 黑色的铁盒子中
+          [03:58.11]私は生まれてきたんだ / 我如此诞生了
+          [04:00.71]悪意の代償を願え / 用恶意的代价来完成愿望
+          [04:03.28]望むがままにお前に / 就像你所希望的那样
+          [04:06.12]さあ与えよう正義を / 来吧，都给与你
+          [04:08.83]壊して壊される前に / 在正义崩坏之前
+          [04:11.36]因果の代償を払い / 偿还因果的代价
+          [04:13.98]報いよ名もなき怪物 / 这就是报应，连名字也没有的怪物
+          [04:15.95]
+          [04:16.95]黒い雨降らせこの空 / 天空降下黑色的雨滴
+          [04:19.42]私は望まれないもの / 我是不被寄望之物
+          [04:22.01]ひび割れたノイローゼ / 破碎不堪的神经官能
+          [04:24.21]愛す同罪の傍観者達に / 与被爱同罪的旁观者们
+          [04:27.57]さあ今ふるえ正義を / 来吧，让正义振作起来
+          [04:30.17]消せない傷を抱きしめて / 坦率面对这不会消失的疤痕
+          [04:32.83]この身体を受け入れ / 接受这副躯壳
+          [04:35.20]共に行こう / 一起同行
+          [04:36.38]名前のない怪物 / 没有名字的怪物
+          [04:43.37]
+          [05:00.62]` // 歌词示例，请替换
+      }
+      // 可以继续添加更多歌曲对象
+    ];
+
+    let currentSongIndex = 0;
+    let parsedLyrics = []; // 存储当前歌曲解析后的歌词
+    let isPlaying = false;
+
+    // --- Utility Functions ---
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00'; // 处理 NaN
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // --- LRC Parser (修改版) ---
+    function parseLRC(lrcText) {
+      if (!lrcText) return [];
+      const lines = lrcText.split('\n');
+      const result = [];
+      const timeRegex = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\]/; // 匹配时间
+
+      lines.forEach(line => {
+        const timeMatch = line.match(timeRegex);
+        if (timeMatch) {
+          const minutes = parseInt(timeMatch[1], 10);
+          const seconds = parseFloat(timeMatch[2]);
+          const time = minutes * 60 + seconds;
+          const textContent = line.replace(timeRegex, '').trim(); // 获取时间标签后的文本
+
+          if (textContent) {
+            const parts = textContent.split('/'); // 用 / 分割语言
+            const jpn = parts[0]?.trim() || ''; // 日语部分，不存在则为空字符串
+            const chn = parts[1]?.trim() || ''; // 中文部分，不存在则为空字符串
+
+            // 确保至少有一部分歌词存在
+            if (jpn || chn) {
+              result.push({ time, jpn, chn });
+            }
+          } else {
+            // 如果时间标签后没有文本，可以添加一个空行或标记
+            // result.push({ time, jpn: '', chn: '' }); // 或者不添加
+          }
+        }
+      });
+      return result.sort((a, b) => a.time - b.time);
+    }
+
+    // --- Load Song ---
+    function loadSong(index) {
+      const song = songs[index];
+      songTitleEl.textContent = song.title;
+      songArtistEl.textContent = song.artist;
+      audio.src = song.src;
+      parsedLyrics = parseLRC(song.lrc);
+      renderLyrics(); // 渲染歌词
+      // 重置播放器状态
+      progressFill.style.width = '0%';
+      currentTimeEl.textContent = '0:00';
+      totalTimeEl.textContent = '0:00';
+      // 总时长需在音频加载元数据后更新
+    }
+
+    // --- Render Lyrics (修改版) ---
+    function renderLyrics() {
+      lyricsContainer.innerHTML = ''; // 清空旧歌词
+      if (parsedLyrics.length === 0) {
+        lyricsContainer.innerHTML = '<div class="lyric-line" style="opacity: 0.5;">无歌词信息</div>';
+        return;
+      }
+      parsedLyrics.forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line';
+        div.dataset.time = line.time;
+
+        // 根据是否存在日语和中文部分来创建 span
+        if (line.jpn) {
+          const jpnSpan = document.createElement('span');
+          jpnSpan.className = 'lyric-jpn'; // 添加类名
+          jpnSpan.textContent = line.jpn;
+          div.appendChild(jpnSpan);
+        }
+        if (line.chn) {
+          const chnSpan = document.createElement('span');
+          chnSpan.className = 'lyric-chn'; // 添加类名
+          chnSpan.textContent = line.chn;
+          div.appendChild(chnSpan);
+        }
+        // 如果 div 仍然是空的 (理论上不会，因为 parseLRC 做了检查)，可以跳过添加
+        if (div.hasChildNodes()) {
+          lyricsContainer.appendChild(div);
+        }
+      });
+    }
+
+    // --- Update Lyrics Highlight & Scroll (保持不变) ---
+    function updateLyrics() {
+      const currentTime = audio.currentTime;
+      const lines = lyricsContainer.querySelectorAll('.lyric-line');
+      if (lines.length === 0) return;
+
+      let activeIndex = -1;
+      // 使用 dataset.time 来比较，因为 parsedLyrics 的索引可能和 lines 不完全对应（如果跳过了空行）
+      lines.forEach((line, index) => {
+        const lineTime = parseFloat(line.dataset.time);
+        if (!isNaN(lineTime) && currentTime >= lineTime) {
+          activeIndex = index;
+        }
+      });
+
+      lines.forEach((line, index) => {
+        line.classList.toggle('active', index === activeIndex);
+      });
+
+      // Auto-scroll
+      if (activeIndex > -1) {
+        const activeLine = lines[activeIndex];
+        if (activeLine) {
+          const containerHeight = lyricsContainer.clientHeight;
+          const lineTop = activeLine.offsetTop - lyricsContainer.offsetTop; // Relative to container
+          const lineCenter = lineTop + activeLine.clientHeight / 2;
+          const scrollTarget = lineCenter - containerHeight / 2;
+
+          lyricsContainer.scrollTo({
+            top: Math.max(0, scrollTarget),
+            behavior: 'smooth'
+          });
+        }
+      } else {
+        lyricsContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+
+    // --- Player Controls (保持不变) ---
+    function playSong() {
+      audio.play().then(() => {
+        isPlaying = true;
+        playPauseBtn.textContent = '❚❚'; // Pause symbol
+        playPauseBtn.setAttribute('aria-label', '暂停');
+      }).catch(error => {
+        console.error("播放错误:", error);
+      });
+    }
+
+    function pauseSong() {
+      audio.pause();
+      isPlaying = false;
+      playPauseBtn.textContent = '▶'; // Play symbol
+      playPauseBtn.setAttribute('aria-label', '播放');
+    }
+
+    function prevSong() {
+      currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    }
+
+    function nextSong() {
+      currentSongIndex = (currentSongIndex + 1) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    }
+
+    // --- Update Progress Bar & Time (保持不变) ---
+    function updateProgress() {
+      if (audio.duration) {
+        const progressPercent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${progressPercent}%`;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      }
+      updateLyrics(); // Update lyrics highlight on time update
+    }
+
+    function setProgress(e) {
+      const width = progressContainer.clientWidth;
+      const clickX = e.offsetX;
+      if (audio.duration) {
+        audio.currentTime = (clickX / width) * audio.duration;
+      }
+    }
+
+    // --- Event Listeners (保持不变) ---
+    playPauseBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        pauseSong();
+      } else {
+        playSong();
+      }
+    });
+
+    prevBtn.addEventListener('click', prevSong);
+    nextBtn.addEventListener('click', nextSong);
+
+    audio.addEventListener('timeupdate', updateProgress);
+
+    audio.addEventListener('loadedmetadata', () => {
+      totalTimeEl.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener('ended', nextSong);
+
+    progressContainer.addEventListener('click', setProgress);
+
+    volumeSlider.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+
+    // --- Initial Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSong(currentSongIndex);
+      audio.volume = volumeSlider.value;
+    });
+
+  </script>
+</body>
+</html>
