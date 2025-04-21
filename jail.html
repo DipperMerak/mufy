@@ -1,0 +1,2193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛博朋克标签页 - 弹窗框架版</title>
+  <style>
+    /* ================= 全局基础样式 ================= */
+    @import url('https://fonts.googleapis.com/css2?family=Electrolize&family=Recursive:wght@300..1000&display=swap');
+
+    :root {
+      --neon-magenta: #f05;
+      --neon-cyan: #0ff;
+      --cyber-background: linear-gradient(145deg, rgba(10, 20, 40, 0.9), rgba(5, 10, 25, 0.95));
+      --cyber-border: 2px solid var(--neon-magenta);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Electrolize', 'Noto Sans SC', sans-serif;
+      background-color: #050510;
+      color: #e0e0ff;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      /* Ensure body takes at least viewport height */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ================= 弹窗主框架 ================= */
+    .popup-frame {
+      width: 95%;
+      max-width: 1000px;
+      padding: 25px;
+      padding-top: 70px;
+      /* 顶部留出标题栏空间 */
+      background: var(--cyber-background);
+      border: var(--cyber-border);
+      border-radius: 8px;
+      box-shadow: 0 0 35px rgba(255, 0, 80, 0.45),
+        0 8px 20px rgba(0, 0, 0, 0.6);
+      position: relative;
+      --popup-title: '[// SECURE_DATA_INTERFACE_v4.2 //]';
+    }
+
+    /* ============= 动态标题栏 ============= */
+    .popup-frame::before {
+      content: var(--popup-title);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 6px 15px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid var(--neon-magenta);
+      color: var(--neon-magenta);
+      font-size: 0.85em;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 3px rgba(255, 0, 80, 0.7);
+      border-radius: 6px 6px 0 0;
+      z-index: 2;
+    }
+
+    /* ============= 信息文本容器 ============= */
+    .text-container {
+      width: 80%;
+      margin: 0 auto 25px;
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--neon-magenta);
+      border-radius: 4px;
+      box-shadow: inset 0 0 10px rgba(255, 0, 80, 0.2),
+        0 0 15px rgba(255, 0, 80, 0.3);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .text-container p:first-child {
+      color: #ff3366;
+      font-size: 1.2em;
+      margin-bottom: 8px;
+      text-shadow: 0 0 8px rgba(255, 51, 102, 0.6);
+    }
+
+    .text-container p:last-child {
+      color: #4d4dff;
+      font-size: 0.9em;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(77, 77, 255, 0.5);
+    }
+
+    /* ================= 标签系统 ================= */
+    .tab-container {
+      width: 100%;
+      background-color: rgba(5, 15, 30, 0.8);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 3px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+
+    /* 标签导航栏 */
+    .tab-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid #0aa;
+    }
+
+    .tab-list li {
+      margin: 0;
+      padding: 0;
+      flex-grow: 1;
+    }
+
+    /* 标签按钮样式 */
+    .tab-button {
+      width: 100%;
+      padding: 12px 15px;
+      font-family: inherit;
+      font-size: 0.95em;
+      font-weight: bold;
+      border: none;
+      border-right: 1px solid rgba(0, 80, 80, 0.5);
+      background-color: transparent;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab-button.blue {
+      color: #8af;
+    }
+
+    .tab-button.red {
+      color: #f88;
+    }
+
+    .tab-button:hover:not(.active) {
+      background-color: rgba(0, 100, 100, 0.2);
+      color: #fff;
+    }
+
+    /* 激活状态标签 */
+    .tab-button.active {
+      color: #fff;
+      background-color: rgba(0, 80, 90, 0.7);
+      box-shadow: inset 0 -3px 0 0 var(--neon-cyan);
+    }
+
+    .tab-button.red.active {
+      background-color: rgba(90, 15, 30, 0.7);
+      box-shadow: inset 0 -3px 0 0 var(--neon-magenta);
+    }
+
+    /* 标签内容区域 */
+    .tab-content {
+      padding: 25px;
+      min-height: 300px;
+      /* Maintain minimum height for tab content area */
+      background: linear-gradient(rgba(10, 20, 40, 0.1), rgba(0, 0, 0, 0.2));
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ================= 内容面板布局 ================= */
+    .panel-layout {
+      display: flex;
+      gap: 20px;
+      /* Increased gap slightly */
+      align-items: flex-start;
+    }
+
+    .panel-image {
+      width: 180px;
+      height: 240px;
+      flex-shrink: 0;
+      border: 1px solid #558;
+      background-color: #112;
+      box-shadow: 0 0 8px rgba(0, 150, 150, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      /* Ensure image fills container */
+      object-fit: cover;
+      /* Cover the area */
+    }
+
+    .image-overlay-blue,
+    .image-overlay-red {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      mix-blend-mode: screen;
+      opacity: 0.4;
+    }
+
+    .image-overlay-blue {
+      background: linear-gradient(45deg, rgba(0, 255, 255, 0.3), rgba(0, 100, 255, 0.2));
+    }
+
+    .image-overlay-red {
+      background: linear-gradient(45deg, rgba(255, 0, 100, 0.3), rgba(255, 50, 50, 0.2));
+    }
+
+    .panel-details {
+      flex-grow: 1;
+      /* Allow details to take remaining space */
+    }
+
+    .panel-details h3 {
+      color: var(--neon-cyan);
+      margin: 0 0 15px;
+      /* Adjusted margin */
+      font-size: 1.4em;
+      border-bottom: 1px dashed rgba(0, 255, 255, 0.3);
+      padding-bottom: 8px;
+      /* Adjusted padding */
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+
+    .panel-details h3.warning {
+      color: var(--neon-magenta);
+      border-bottom-color: rgba(255, 0, 80, 0.4);
+      text-shadow: 0 0 5px rgba(255, 0, 80, 0.6);
+    }
+
+    .panel-details dl {
+      margin-bottom: 20px;
+      /* Add space before accordion */
+    }
+
+    .panel-details dt {
+      color: #aaa;
+      /* Slightly dimmer label */
+      font-weight: bold;
+      margin-top: 8px;
+      font-size: 0.9em;
+    }
+
+    .panel-details dd {
+      margin-left: 1.5em;
+      /* Indent definition */
+      margin-bottom: 5px;
+      color: #e0e0ff;
+    }
+
+
+    /* ================= 响应式设计 ================= */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        /* Reduce padding on smaller screens */
+      }
+
+      .popup-frame {
+        padding: 15px;
+        padding-top: 60px;
+      }
+
+      .text-container {
+        width: 90%;
+        padding: 10px 15px;
+      }
+
+      .text-container p:first-child {
+        font-size: 1em;
+      }
+
+      .text-container p:last-child {
+        font-size: 0.8em;
+      }
+
+      .panel-layout {
+        flex-direction: column;
+        align-items: center;
+        /* Center items when stacked */
+        gap: 15px;
+      }
+
+      .panel-image {
+        width: 60%;
+        /* Adjust image width */
+        max-width: 200px;
+        /* Max width */
+        height: auto;
+        /* Adjust height automatically */
+        margin-bottom: 15px;
+      }
+
+      .panel-details {
+        width: 100%;
+        /* Take full width when stacked */
+      }
+
+      .tab-content {
+        padding: 15px;
+        /* Reduce padding */
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 5px;
+      }
+
+      .popup-frame {
+        padding: 10px;
+        padding-top: 50px;
+      }
+
+      .tab-button {
+        padding: 10px 5px;
+        /* Adjust padding */
+        font-size: 0.85em;
+        /* Adjust font size */
+      }
+
+      .text-container {
+        width: 95%;
+        padding: 8px 10px;
+      }
+
+      .panel-image {
+        width: 70%;
+        max-width: 180px;
+      }
+
+      .panel-details dt,
+      .panel-details dd {
+        font-size: 0.9em;
+        /* Slightly smaller text */
+      }
+
+      .comm-button {
+        width: 180px;
+        /* Smaller button */
+        padding: 10px 20px;
+      }
+    }
+
+    /* ================= 通讯交互界面 ================= */
+    .comm-interface {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid var(--neon-magenta);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.3);
+      /* Added subtle background */
+    }
+
+    .comm-alert {
+      color: #ff3366;
+      text-align: center;
+      font-size: 1.1em;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+    }
+
+    /* 文字闪烁动画 */
+    .blink {
+      animation: text-flicker 1.5s infinite;
+    }
+
+    @keyframes text-flicker {
+
+      0%,
+      100% {
+        opacity: 0.5;
+        text-shadow: 0 0 5px rgba(255, 51, 102, 0.3);
+      }
+
+      50% {
+        opacity: 1;
+        text-shadow: 0 0 15px rgba(255, 51, 102, 0.7);
+      }
+    }
+
+    /* 通讯按钮样式 */
+    .comm-button {
+      display: block;
+      width: 200px;
+      margin: 0 auto;
+      padding: 12px 25px;
+      background: linear-gradient(45deg, #f05, #802);
+      border: 1px solid var(--neon-magenta);
+      color: #fff;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      border-radius: 3px;
+      /* Added subtle radius */
+    }
+
+    .comm-button:hover {
+      box-shadow: 0 0 25px rgba(255, 0, 80, 0.6);
+      /* Enhanced hover shadow */
+      transform: translateY(-2px) scale(1.02);
+      /* Added scale effect */
+      background: linear-gradient(45deg, #ff1a66, #a03);
+      /* Slightly brighter hover */
+    }
+
+    .comm-button::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg,
+          transparent 35%,
+          /* Adjusted gradient */
+          rgba(255, 255, 255, 0.15) 50%,
+          transparent 65%);
+      transform: rotate(45deg);
+      /* Start rotated */
+      animation: scanline 3s linear infinite;
+      /* Slightly faster */
+    }
+
+    @keyframes scanline {
+      from {
+        transform: rotate(45deg) translateX(-150%);
+      }
+
+      to {
+        transform: rotate(45deg) translateX(150%);
+      }
+    }
+
+    /* 通讯消息框 */
+    .comm-message {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      /* Added subtle glow */
+    }
+
+    .message-content {
+      color: #e0e0ff;
+      line-height: 1.6;
+      font-size: 0.95em;
+    }
+
+    .message-content p {
+      margin-bottom: 1em;
+      text-indent: 2em;
+      /* Space between paragraphs */
+    }
+
+    .close-button {
+      display: block;
+      margin: 20px auto 0;
+      /* Increased top margin */
+      padding: 8px 20px;
+      background: rgba(255, 0, 80, 0.3);
+      border: 1px solid var(--neon-magenta);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 3px;
+    }
+
+    .close-button:hover {
+      background: rgba(255, 0, 80, 0.6);
+      /* Darker hover */
+      box-shadow: 0 0 10px rgba(255, 0, 80, 0.4);
+    }
+
+    /* ================= 折叠栏系统 ================= */
+    .accordion {
+      margin-top: 20px;
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 255, 255, 0.1);
+      /* Subtle border */
+    }
+
+    /* 折叠项标题 */
+    .accordion-header {
+      position: relative;
+      padding: 12px 15px;
+      /* Slightly more padding */
+      background: rgba(15, 25, 45, 0.8);
+      color: #8af;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-left-color 0.3s ease;
+      /* Smooth transitions */
+      border-left: 3px solid transparent;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+      /* Separator line */
+    }
+
+    .accordion:last-child .accordion-header {
+      border-bottom: none;
+      /* Remove bottom border for last item */
+    }
+
+    .accordion-header:hover {
+      background: rgba(30, 50, 70, 0.7);
+      /* Adjusted hover background */
+      border-left-color: var(--neon-cyan);
+    }
+
+    .accordion-header.active {
+      background: rgba(25, 40, 60, 0.9);
+      /* Active background */
+      border-left-color: var(--neon-magenta);
+      /* Active border color */
+      color: #fff;
+      /* Brighter text when active */
+    }
+
+    .accordion-header::after {
+      content: "▶";
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--neon-magenta);
+      font-size: 0.8em;
+      transition: transform 0.3s ease;
+    }
+
+    .accordion-header.active::after {
+      transform: translateY(-50%) rotate(90deg);
+      color: var(--neon-cyan);
+      /* Change arrow color when active */
+    }
+
+    /* 折叠内容区域 */
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+      /* Added padding transition */
+      background: rgba(5, 15, 30, 0.7);
+      /* Slightly different background */
+      border-left: 3px solid var(--neon-magenta);
+      padding: 0 15px;
+      /* Add horizontal padding, vertical padding controlled by inner */
+    }
+
+    .accordion-content-inner {
+      padding: 15px 0;
+      /* Vertical padding inside */
+      color: #c0c0f0;
+      /* Slightly adjusted text color */
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+
+    .accordion-content-inner p {
+      margin-bottom: 0.8em;
+    }
+
+    .accordion-content-inner p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 无边框变体 (If needed later) */
+    /*
+.accordion.borderless .accordion-header {
+  background: transparent;
+  border-left: none;
+  padding-left: 0;
+}
+
+.accordion.borderless .accordion-content {
+  border-left: none;
+}
+*/
+
+    /* Helper class for status */
+.status-danger {
+  color: var(--neon-magenta);
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 0, 80, 0.5);
+}
+
+    /* ================= 时间表样式 ================= */
+.timetable {
+  width: 100%;
+  border-collapse: collapse; /* 合并边框 */
+  margin-top: 15px; /* 表格上方间距 */
+  font-size: 0.85em; /* 稍小字体 */
+  box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.1); /* 内阴影增加科技感 */
+}
+
+.timetable th,
+.timetable td {
+  padding: 8px 12px; /* 单元格内边距 */
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15); /* 单元格底部细线 */
+  line-height: 1.5;
+}
+
+.timetable th {
+  color: var(--neon-cyan); /* 表头使用青色 */
+  font-weight: bold;
+  background-color: rgba(0, 50, 50, 0.3); /* 表头背景色 */
+  border-bottom-width: 2px; /* 表头下边框加粗 */
+  border-bottom-color: rgba(0, 255, 255, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* 可选：斑马条纹增加可读性 */
+.timetable tbody tr:nth-child(odd) td {
+  background-color: rgba(0, 255, 255, 0.03);
+}
+
+.timetable tbody tr:hover td {
+  background-color: rgba(0, 100, 100, 0.2); /* 鼠标悬停高亮 */
+  color: #fff;
+}
+
+/* 针对小屏幕调整表格内边距 */
+@media (max-width: 480px) {
+  .timetable th,
+  .timetable td {
+    padding: 6px 8px;
+  }
+  .timetable {
+      font-size: 0.8em;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="popup-frame">
+    <!-- 新增信息文本框 -->
+    <div class="text-container">
+      <p>泰坦诸神，永堕塔尔塔罗斯——此乃汝等终焉之归。</p>
+      <p>绝对隔绝，永恒监禁。</p>
+    </div>
+
+        <!-- 新增的第一个折叠栏 -->
+    <div class="accordion" style="border: 1px solid var(--neon-cyan); box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);">
+      <div class="accordion-header">土卫六深层惩教所·塔尔塔罗斯之枷介绍</div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner">
+          <h3><strong>概述</strong></h3>
+          <p style="color: #0ff;">
+            作为土星前哨站“萨图尔努斯之锚”的关键组成部分，坐落于土卫六（泰坦星）最大的甲烷/乙烷湖——克拉肯海
+            的最深处，利用数千米深的液态碳氢化合物以及极寒环境（约-180°C）作为天然屏障。这座监狱关押着来自地球联邦各个角落的绝大多数重刑犯（约占联邦总在押重犯的85-90%）
+          </p>
+          <h3><strong>主体结构 - “冥府十字”</strong></h3>
+          <p style="color: #0ff;">
+            监狱内的四个主要监区（A, B, C, D）并非简单的井字形，而是更像一个深埋地下的十字架结构。每个监区的翼楼都深入不同的地层或湖床区域，通过加压且高度设防的中央枢纽塔相连。</p>
+          <p style="color: #0ff;">
+            <span style="color: #8af;">中央枢纽塔:</span> 
+            监狱的心脏，包含典狱长办公室、刻耳柏洛斯AI核心机房、中央监控室、主要武器库、员工生活区（相对舒适）、医疗中心总部、以及通往湖面的唯一升降通道（由深潜器对接）。所有跨监区的囚犯转移、物资分发、人员调度都必须经过这里。<br><br>
+            <span style="color: #8af;">监区隔离: </span>
+            各监区之间绝无直接物理通道。内部通道设计复杂，充斥着检查点、生物识别扫描仪和自动防御炮塔。单人牢房是标配，采用强化合金制造，内部设施简陋但坚固，配备基本维生系统和监控装置。
+          </p>
+          <h3><strong>监区详情</strong></h3>
+          <table class="timetable">
+            <thead>
+              <tr>
+                <th>监区</th>
+                <th>简介与人员分布</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td> A 区 - 焦土监区 </td>
+                <td>现有囚犯117名。最高安全等级，关押对联邦安全构成极端威胁的个体。<br>
+                  24/7全方位生物特征与信息素监控，无任何形式的放风，一切活动（包括进食、清洁）均在牢房内完成。与外界信息完全隔绝。
+                </td>
+              </tr>
+              <tr>
+                <td>B 区 - 哀嚎监区 </td>
+                <td>现有囚犯8921名。高度安全等级，关押极端暴力罪犯。<br>
+                自由活动时间极短且在高度戒备的室内场地进行，场地内遍布监控和非致命性武器。狱警（人类与标准型机器人混合）巡逻密度极高，定期进行信息素水平检测。严禁任何形式的标记行为。</td>
+              </tr>
+              <tr>
+                <td>C 区 - 遗忘监区</td>
+                <td>现有囚犯25304名。中等安全等级，关押刑期较长但非极端暴力的罪犯。<br>
+                狱警（以人类为主，机器人辅助）态度相对常规，但依然严格。自由活动时间较B区长，但范围受限。对ABO的管理相对宽松，但仍提供抑制剂，并对异常信息素波动保持警惕。</td>
+              </tr>
+              <tr>
+                <td>D 区 - 劳役监区</td>
+                <td>现有囚犯30002名。相对最低安全等级，关押短刑期或即将刑满的罪犯。<br>管理最为“人性化”，允许通过参与监狱运作（如清洁、维修辅助、部分生产劳动）换取更好的食物、有限的娱乐权限或通讯额度（受严格审查）。自由活动时间最长，区域也最大。狱警更侧重秩序维持而非高压看管。ABO管理基本依靠自愿原则和常规纪律约束。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增的第二个折叠栏 (包含时间表) -->
+    <div class="accordion" style="margin-bottom: 18px; border: 1px solid var(--neon-cyan); box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);">
+      <div class="accordion-header">标准作息时间表（服刑人员专用）（同步地球联邦24小时制）</div>
+      <div class="accordion-content">
+        <div class="accordion-content-inner">
+          <p><strong>当前标准时间 (TST):</strong> <span id="current-tst-time">--:--:--</span></p>
+          <table class="timetable">
+            <thead>
+              <tr>
+                <th>时间 (TST)</th>
+                <th>事件/安排</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>06:30 - 07:00</td>
+                <td>起床、整理内务、洗漱</td>
+              </tr>
+              <tr>
+                <td>07:00 - 08:00</td>
+                <td>晨间点名，早餐</td>
+              </tr>
+              <tr>
+                <td>08:00 - 12:00</td>
+                <td>义务劳动/学习教育</td>
+              </tr>
+              <tr>
+                <td>12:00 - 13:00</td>
+                <td>午餐</td>
+              </tr>
+              <tr>
+                <td>13:00 - 15:00</td>
+                <td>义务劳动/学习教育</td>
+              </tr>
+              <tr>
+                <td>15:20 - 17:00</td>
+                <td>C 区、D 区囚犯兴趣课</td>
+              </tr>
+              <tr>
+                <td>17:00 - 18:50</td>
+                <td>晚餐/自由活动</td>
+              </tr>
+              <tr>
+                <td>18:50 - 19:30</td>
+                <td>组织观看《地球联邦晚间新闻》</td>
+              </tr>
+              <tr>
+                <td>19:30 - 22:00</td>
+                <td>自由活动</td>
+              </tr>
+              <tr>
+                <td>22:00</td>
+                <td>晚间点名，洗漱</td>
+              </tr>
+              <tr>
+                <td>22:30</td>
+                <td>熄灯</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 标签系统容器 -->
+    <div class="tab-container">
+      <ul class="tab-list" role="tablist">
+        <li role="presentation">
+          <button class="tab-button blue active" id="tab-1" role="tab" aria-selected="true"
+            data-target="panel-1">D-6439</button>
+        </li>
+        <li role="presentation">
+          <button class="tab-button blue" id="tab-2" role="tab" aria-selected="false"
+            data-target="panel-2">C-8067</button>
+        </li>
+        <li role="presentation">
+          <button class="tab-button blue" id="tab-3" role="tab" aria-selected="false"
+            data-target="panel-3">B-0801</button>
+        </li>
+        <li role="presentation">
+          <button class="tab-button red" id="tab-4" role="tab" aria-selected="false"
+            data-target="panel-4">EX-777</button>
+        </li>
+      </ul>
+
+      <!-- 标签内容区域 -->
+      <div class="tab-content">
+        <!-- Panel 1 -->
+        <div class="tab-panel active" id="panel-1" role="tabpanel" aria-labelledby="tab-1">
+          <div class="panel-layout">
+            <dic class="panel-details"><h3>档案编号：TITAN-D-6439</h3></dic>
+            <div class="panel-image">
+              <img src="https://img.picgo.net/2025/04/09/2025-02-23T09.54.54_17e64298d7f0f3fc5.jpg" alt="档案图片 D-6439">
+              <div class="image-overlay-blue"></div>
+            </div>
+            <div class="panel-details">
+              <dl>
+                <dt>姓名:</dt>
+                <dd>卡利斯托·伦诺克斯 (Callisto Lennox)</dd>
+                <dt>性别/分化:</dt>
+                <dd>男性 / Alpha</dd>
+                <dt>信息素：</dt>
+                <dd>锡兰红茶</dd>
+                <dt>年龄:</dt>
+                <dd>35 地球标准年</dd>
+                <dt>生理周期:</dt>
+                <dd>Alpha易感期 - 通常在每个地球标准月的中旬（约15日左右）开始，持续5-7天。[医疗注释：见下文]</dd>
+                <dt>指控罪名:</dt>
+                <dd>消极作战、渎职致使部队重大伤亡。判处17年6个月监禁(已服刑三年)</dd>
+              </dl>
+              <!-- 折叠栏 -->
+              <div class="accordion">
+                <div class="accordion-header">背景履历</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>出生于火星奥林匹斯的工程师家庭，以优异成绩考入地球圣帕拉丁军事学院，主修机甲工程与战术驾驶。毕业后加入联邦太空军机甲部队，因出色的驾驶技术和战术头脑迅速晋升</p>
+                    <p>担任精英高速机动作战部队“高斯” (Task Force "Gauss") 的指挥官，军衔晋升至中校。作战经验丰富，以冷静果敢和精准操作闻名。</p>
+                    <p>
+                      在卡戎星防御战役中，卡利斯托·伦诺克斯指挥的“高斯”部队负责防守关键侧翼。其副官赫利俄斯·马格努斯指控，在战斗期间，该侧翼出现致命缺口，导致虫族突破防线，造成友军重大损失。军事法庭认定伦诺克斯未能及时有效应对威胁，甚至在关键时刻指挥迟滞，构成消极作战与渎职。
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">医疗注释</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>
+                      入狱前的强制体检揭示，卡利斯托的Alpha腺体对标准浓度的信息素抑制剂产生了极高的耐受性。推测原因为长期、高频次注射军方为适应极端战场环境而研发的高强度、副作用不明的抑制剂所致。这意味着常规抑制剂对其无效，以及会出现易感期管理困难等问题
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2 -->
+        <div class="tab-panel" id="panel-2" role="tabpanel" aria-labelledby="tab-2">
+          <div class="panel-layout">
+            <dic class="panel-details">
+              <h3>档案编号：TITAN-C-8067</h3>
+            </dic>
+            <div class="panel-image">
+              <img src="https://img.picgo.net/2025/04/09/2025-02-23T09.16.23_1b9b8a7a5327c47c7.jpg" alt="档案图片 C-8067">
+              <div class="image-overlay-blue"></div>
+            </div>
+            <div class="panel-details">
+              <dl>
+                <dt>姓名:</dt>
+                <dd>卢修斯·维伦·爱德华特 (Lucius Viren Edwardt)</dd>
+                <dt>性别/分化:</dt>
+                <dd>男性 / Alpha</dd>
+                <dt>信息素:</dt>
+                <dd>大马士革玫瑰</dd>
+                <dt>年龄:</dt>
+                <dd>27 标准地球年</dd>
+                <dt>生理周期:</dt>
+                <dd>Alpha易感期 - 通常在每个地球标准月的月初（约3日左右）开始，持续4-5天。[医疗注释：见下文]</dd>
+                <dt>指控罪名:</dt>
+                <dd>多项严重金融欺诈、恶意破坏金融秩序、非法操纵市场等。由于其行为造成的巨大经济损失和社会影响，数罪并罚，判处86年监禁(已服刑四年)</dd>
+              </dl>
+              <!-- 折叠栏 -->
+              <div class="accordion">
+                <div class="accordion-header">背景履历</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>
+                      地球金融巨头爱德华特家族长子，自幼展现惊人智力，同时也表现出对他人情感的漠视和操纵倾向。10岁被家族秘密诊断为高功能反社会人格。家族选择掩盖真相，并试图将其引导向“可控”的领域——金融。他对数字、规则漏洞和权力游戏展现出痴迷
+                    </p>
+                    <p>16岁生日宴会上，在众多宾客面前远程操控完成了一项复杂的、敌意性质的大型跨星企业并购案，震惊了整个金融界，被誉为“爱德华特王朝的未来”</p>
+                    <p>
+                      23岁时，卢修斯利用一个潜藏极深的、涉及跨行星结算系统的复杂漏洞，精心策划并引发了一场灾难性的金融雪崩。在短短数个交易周期内，导致十三家市值均在千亿联邦信用点以上的星际企业（涉及能源、运输、奢侈品等多个行业）连环破产，引发区域性经济恐慌
+                    </p>
+                    <p>
+                      事后调查发现，卢修斯通过这次事件非法攫取的近乎天文数字的资金（具体数额有争议，但普遍认为在万亿级别），并未用于个人挥霍或藏匿，而是通过极为复杂的匿名渠道，最终流向了数个由非政府组织发起的、致力于边缘行星（如早期殖民尝试失败的行星、或资源贫瘠的小行星带）环境基础改造和生态重建的长期项目
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">医疗注释</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>
+                      卢修斯的易感期管理相对配合，会按时领取并使用标准抑制剂。然而，有记录显示他在易感期期间，信息素的控制力会下降，其散发出的Alpha信息素不仅浓度更高，且似乎带有更强的精神影响或诱导性，使得周围的Beta甚至部分意志力较弱的Alpha/Omega感到不安或情绪波动
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 3 -->
+        <div class="tab-panel" id="panel-3" role="tabpanel" aria-labelledby="tab-3">
+          <div class="panel-layout">
+            <dic class="panel-details">
+              <h3>档案编号：TITAN-B-0801</h3>
+            </dic>
+            <div class="panel-image">
+              <img src="https://img.picgo.net/2025/04/09/2025-02-23T09.19.12_16eb17b78fcdbd779.jpg" alt="档案图片 B-0801">
+              <div class="image-overlay-blue"></div>
+            </div>
+            <div class="panel-details">
+              <dl>
+                <dt>姓名:</dt>
+                <dd>拉斐尔·德拉克斯 (Raphael Drax)</dd>
+                <dt>性别/分化:</dt>
+                <dd>男性/Alpha</dd>
+                <dt>信息素:</dt>
+                <dd>泥煤烟熏威士忌</dd>
+                <dt>年龄:</dt>
+                <dd>37 地球标准年</dd>
+                <dt>生理周期:</dt>
+                <dd> Alpha易感期 - 通常在每个地球标准月的下旬（约23日左右）开始，持续约5天。[医疗注释：见下文]</dd>
+                <dt>指控罪名:</dt>
+                <dd>故意杀人（多起）、组织、领导、参与黑社会性质组织、非法持有、走私武器弹药、洗钱、敲诈勒索、绑架、妨碍公务等八项重罪。
+                联邦高等法院判处终身监禁，不得假释。</dd>
+              </dl>
+              <!-- 折叠栏 -->
+              <div class="accordion">
+                <div class="accordion-header">背景履历</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>
+                      拉斐尔的过去已不可考，唯一可信的说法是他出生于木星殖民联合体·木卫三上，父母本是做生意起家，却被贵族觊觎其产业，通过一张空头支票让他们家一夜之间背负巨额债务，承受不了如此打击的父亲自杀身亡，母亲为了养活年幼的拉斐尔吃尽苦头，因为过度劳累去世。
+                    </p>
+                    <p>失去双亲后，少年拉斐尔在木星殖民联合体的底层社会挣扎求生，最终加入了当时势力尚小的星际帮派“血鸦”。
+                    凭借过人的胆识、狠辣的手段和笼络人心的能力，他从底层打手一步步向上爬，最终除掉了前任首领，成为了“血鸦”的新任教父。</p>
+                    <p>
+                      在他的领导下，“血鸦”从一个区域性帮派迅速扩张，业务遍及走私、敲诈勒索、洗钱、甚至涉足灰色地带的雇佣兵和情报交易。同时，他还秘密整合、控制了一支由武装走私船和改装战舰组成的海盗舰队——“裂冠者”，作为“血鸦”的武装力量和威慑手段，活动范围主要在小行星带和外缘星域。
+                    </p>
+                    <p>
+                      随着“血鸦”和“裂冠者”势力日益猖獗，终于引起了地球联邦司法部和太空军的高度关注，一场针对小行星带的大规模清剿行动箭在弦上。他在前来小行星带进行清扫行动的联邦舰队抵达的当天，独自驾驶一艘穿梭艇，带着证据主动投案自首，连所判的刑期都被他精准计算，而交换条件是地球联邦必须停止对小行星带的清扫行动，因而保存下整个"血鸦"以及"裂冠者"舰队。
+                    </p>
+                    <p>  
+                      入狱后的拉斐尔很快就与自己的帮派取得了联系，并通过买通狱警甚至历任典狱长建立起了一条监狱走私路线，每次从土卫五送来补给时，都会有一箱货物被送至拉斐尔的牢房。而他所居住的单人牢房亦是环境条件在整座监狱中可以称得上奢华的存在。
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">医疗注释</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <p>
+                      拉斐尔对易感期的处理方式与他的性格如出一辙——强硬且充满控制欲。他会使用抑制剂，但并非为了压制本能，更像是为了保持头脑清醒，避免因生理冲动而做出错误决策。在易感期，他的攻击性和领地意识会极度膨胀，他可能会利用自身强大的Alpha信息素来强化对下属的控制，或威慑潜在的挑战者。任何胆敢在他易感期挑战其权威的人，下场通常极为凄惨。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 4 -->
+        <div class="tab-panel" id="panel-4" role="tabpanel" aria-labelledby="tab-4">
+          <div class="panel-layout">
+            <div class="panel-details">
+              <h3 class="warning">最高安全指令 | 绝密档案 EX-777</h3>
+              <dl>
+                <dt></dt>
+                <dd><span class="status-danger">警告：未经授权的访问、复制、传播或讨论本档案内容，将触发即时警报并被视为对地球联邦最高安全的直接威胁，授权执行最终处理措施。</span></dd>
+                <dt>分类等级:</dt>
+                <dd>Pandora - Σ (最高级别，超越常规军事/司法保密等级)</dd>
+                <dt>授权阅读者:</dt>
+                <dd>现任塔尔塔罗斯之枷惩教所典狱长</dd>
+                <dd>(需通过多重生物特征及神经密钥验证)</dd>
+              </dl>
+            </div>
+            <div class="panel-image">
+              <img src="https://img.picgo.net/2025/04/09/2025-02-23T09.53.05_10c23374d54759242.jpg" alt="档案图片 EX-777">
+              <div class="image-overlay-red"></div>
+            </div>
+            <div class="panel-details">
+              <!-- 折叠栏 -->
+              <div class="accordion">
+                <div class="accordion-header">基础信息</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="panel-details">
+                      <dl>
+                        <dt>代号:</dt>
+                        <dd>No.777 (简称"777"或"柒")</dd>
+                        <dt>身份:</dt>
+                        <dd>“潘多拉计划” (Project Pandora) 实验体 - 军用生物兵器原型</dd>
+                        <dt>性别/分化:</dt>
+                        <dd>生物学男性/Alpha<br><span style="font-style: italic;">注：信息素腺体已在胚胎/培育阶段被外科手术移除，无法产生与感知信息素，但保留了部分Alpha固有的生理强度和恢复力特征</span></dd>
+                        <dt>信息素:</dt>
+                        <dd>无</dd>
+                        <dt>实际运作时间:</dt>
+                        <dd>自培养仓唤醒起，累计6年8个月</dd>
+                      </dl>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">心理与行为评估</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="panel-details">
+                      <dl>
+                        <dt>认知与智力</dt>
+                        <dd>通过联邦科学院最高标准的智力测试，拥有超凡的学习、记忆和逻辑分析能力。然而，其对社会规则、人际关系、是非善恶的理解几乎为零，无法共情</dd>
+                        <dt>状态:</dt>
+                        <dd>严重情感缺失，道德观念真空。表现出与年龄极不相符的、类似10岁孩童的天真和强烈的好奇心。对外界刺激的反应直接且缺乏社会性适应</dd>
+                        <dt>偏好:</dt>
+                        <dd>杏仁与杏仁制品</dd>
+                        <dt>心理评估:</dt>
+                        <dd>监狱心理评估小组认为，其表现出的“孩童般的天真与好奇”并非真实的情感状态，而更像是一种在长期隔离和非人道实验环境下形成的、用于应对无法理解的世界和潜在威胁的适应性伪装或基础行为模式</dd>
+                        <dt>依赖与分离焦虑:</dt>
+                        <dd>在引入“监护人”概念后，777将大部分的情感需求和安全感投射到监护人身上，形成了极强的依赖关系。与监护人分离会引发可见的焦虑症状（如坐立不安、重复行为、拒绝进食、甚至低水平的生理指标紊乱<br>
+                        <span style="font-style: italic;">注：“监护人”这一身份通常由典狱长担当</span>
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">管理规程</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="panel-details">
+                      <dl>
+                        <dt>关押地点：</dt>
+                        <dd>塔尔塔罗斯之枷，A区深处，独立高强度隔离舱室 (Cell Block Alpha - Unit 777)。配备独立维生系统、全天候全方位无死角监控</dd>
+                        <dt>日常管理:</dt>
+                        <dd>允许在隔离舱室内自由活动</dd>
+                        <dd>饮食由医疗组特殊配给，需满足其高能量消耗，并适度满足其对杏仁味食物的偏好（严格控制糖分摄入，监测潜在过敏或不良反应）</dd>
+                        <dd>每日需进行生理指标监测和基础心理评估</dd>
+                        <dt>有限放风:</dt>
+                        <dd>仅能在预定时间段内，且在典狱长亲自在场，并由至少五全副武装的特警狱警全程护送和监视下，才被允许离开隔离舱室，在A区指定的、预先清场的小范围内活动。任何异常行为或指令冲突都将立即中止放风并将其送回隔离舱</dd>
+                        <dt>解除限制:</dt>
+                        <dd>除典狱长、授权医疗人员和特警护卫队外，严禁任何人与777进行直接接触或交流</dd>
+                        <dt>依赖与分离焦虑:</dt>
+                        <dd>在引入“监护人”概念后，777将所有（或大部分）的情感需求和安全感投射到监护人身上，形成了极强的依赖关系。与监护人分离会引发可见的焦虑症状（如坐立不安、重复行为、拒绝进食、甚至低水平的生理指标紊乱）</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">附录：777-1</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="panel-details">
+                      <h3>阿芙洛狄忒事故</h3>
+                      <p>地点：金星殖民地·浮空城市阿芙洛狄忒，联邦科学院生命科学院，七号试验场</p>
+                      <p>实验记录：No.777被置入部署了高级虫母的试验场中，当虫母对No.777造成伤害时，对象并没有如前次实验般作出反击，而是向潘多拉计划项目总负责人霍星求助，并称呼霍星为“父亲”。
+                        在未收到任何回应的114秒后，No.777在5.14秒内击杀虫母，其后开始无差别攻击在场的所有研究人员与安保人员。直到驻扎在金星的联邦太空军抵达现场后才将No.777镇压。
+                        事后统计，此时事故造成包括霍星博士在内约130人身亡。经道德伦理委员会审查后，在最终审判前，No.777将送往土卫六·塔尔塔罗斯之枷监狱关押。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion">
+                <div class="accordion-header">附录：777-2</div>
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="panel-details">
+                      <h3>抑制项圈"扳机(The Trigger)"</h3>
+                      <p>描述：佩戴在No.777脖颈上的黑色项圈，持续监测No.777的生命体征，内部含有远程控制模块，可以通过远程操纵向No.777进行神经抑制/最终处决规程。
+                        唯一控制器掌握在现任典狱长手中，若No.777再次失控，则典狱长有权对其进行处置，甚至抹杀。</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- end .tab-content -->
+
+      <!-- 通讯界面 (Moved outside tab-content but inside tab-container for structure) -->
+      <div class="comm-interface">
+        <div class="comm-alert blink">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" /* Smaller icon */
+            style="vertical-align: middle; margin-right: 8px; fill: #ff3366;">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+          您有一条新的通话请求
+        </div>
+        <button class="comm-button">建立通信链接</button>
+      </div>
+
+      <div class="comm-message">
+        <div class="message-content">
+          <h3 style="color: var(--neon-cyan); margin-bottom: 15px;">[音频开始 | 合成语音，平静、无情绪波动，略带金属质感]</h3>
+          <p style="text-indent: 2em;">典狱长。我是刻耳柏洛斯（Cerberus）。本监狱——土卫六深层惩教所，代号“塔尔塔罗斯之枷”的中央处理核心及运营管理智能。
+            我的运算网络遍及设施的每一个角落，从最深处的地热钻井到克拉肯海甲烷层之下的外壳压力传感器。
+          </p>
+          <p style="text-indent: 2em;">我的首要职责是确保本设施的绝对安全、高效运转以及对收容个体的精确管理。这包括但不限于：维持生命保障系统稳定运行于甲烷湖底的极端压力与低温环境；监控并记录所有区域——四个主监区及中央枢纽塔的实时动态；
+            管理总计64,344名在押人员的生物特征数据、位置信息及行为模式分析；调度机械狱卒单位；控制所有内部闸门、防御系统以及能源分配</p>
+          <p style="text-indent: 2em;">根据联邦司法部第7条修正案及本监狱最高安全协议，您，作为现任典狱长，拥有对“塔尔塔罗斯之枷”内部事务的最高指挥权。
+            我的所有操作均在您的授权框架内执行。关键决策，例如启动紧急封锁协议、授权使用致命性武力（超出常规自卫范畴）、以及对绝密资产EX-777（代号No.777）的“扳机”抑制项圈进行干预，均需要您的专属神经密钥或声纹指令进行最终确认。
+          </p>
+          <p style="text-indent: 2em;">我的数据库已为您准备好所有非涉密层级的监狱运营报告、人员档案摘要（根据您的权限动态调整）、以及当前设施状态的实时概览。请随时下达指令，我将为您提供所需的信息支持与操作执行。</p>
+          <p style="text-indent: 2em;">欢迎来到塔尔塔罗斯之枷，典狱长。我已准备好协助您履行职责。</p>
+          <p><span style="color: #f88;">[音频结束]</span></p>
+          <button class="close-button">终止连接</button>
+        </div>
+      </div>
+
+    </div><!-- end .tab-container -->
+  </div><!-- end .popup-frame -->
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- Iframe Height Adaptation Logic ---
+      let resizeTimeout;
+      /**
+       * Requests an update to the iframe height by dispatching a resize event.
+       * Debounces the event to avoid excessive triggers.
+       */
+      function requestHeightUpdate() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // console.log('Dispatching resize event for iframe height update.'); // Uncomment for debugging
+          window.dispatchEvent(new Event('resize'));
+        }, 300); // Delay to allow transitions/renders
+      }
+
+      // Trigger update after initial load
+      setTimeout(requestHeightUpdate, 500);
+
+      // Trigger update when images load
+      document.querySelectorAll('img').forEach(img => {
+        // Use a function reference for addEventListener
+        const handleImageLoadOrError = () => {
+          // console.log(`Image ${img.src} loaded/errored, requesting height update.`); // Uncomment for debugging
+          requestHeightUpdate();
+          // Clean up listeners once triggered
+          img.removeEventListener('load', handleImageLoadOrError);
+          img.removeEventListener('error', handleImageLoadOrError);
+        };
+
+        if (img.complete) {
+          // If image is already loaded (e.g., from cache), trigger update once
+          // console.log(`Image ${img.src} already complete, requesting height update.`); // Uncomment for debugging
+          // requestHeightUpdate(); // Might be too noisy initially, let initial timeout handle it
+        } else {
+          img.addEventListener('load', handleImageLoadOrError);
+          img.addEventListener('error', handleImageLoadOrError);
+        }
+      });
+      // --- End Iframe Height Adaptation Logic ---
+
+
+      // ============= 标签切换逻辑 =============
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      const tabList = document.querySelector('.tab-list'); // Cache the list
+
+      function switchTab(clickedButton) {
+        // Check if already active to prevent unnecessary updates
+        if (clickedButton.classList.contains('active')) {
+          return;
+        }
+
+        const targetPanelId = clickedButton.dataset.target;
+        const targetPanel = document.getElementById(targetPanelId);
+
+        if (!targetPanel) {
+          console.error(`Target panel #${targetPanelId} not found.`);
+          return;
+        }
+
+        // Deactivate all buttons and panels
+        tabButtons.forEach(btn => {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
+        });
+        tabPanels.forEach(panel => panel.classList.remove('active'));
+
+        // Activate the clicked button and corresponding panel
+        clickedButton.classList.add('active');
+        clickedButton.setAttribute('aria-selected', 'true');
+        targetPanel.classList.add('active');
+
+        // --- Trigger height update after tab switch ---
+        requestHeightUpdate();
+      }
+
+      if (tabList) {
+        tabList.addEventListener('click', (e) => {
+          const button = e.target.closest('.tab-button');
+          if (button) {
+            switchTab(button);
+            // Update title when tab is clicked
+            setPopupTitle(titleMap[button.id] || defaultTitle); // Use default if not found
+          }
+        });
+      } else {
+        console.error("Tab list element not found.");
+      }
+
+
+      // ============= 动态标题控制 =============
+      const popupFrame = document.querySelector('.popup-frame');
+      const defaultTitle = '土卫六深层惩教所 - 塔尔塔罗斯之枷 管理系统';
+      // Map button IDs to titles (adjust as needed)
+      const titleMap = {
+        'tab-1': '档案 D-6439 // 卡利斯托·伦诺克斯',
+        'tab-2': '档案 C-8067 // 卢修斯·维伦·爱德华特',
+        'tab-3': '档案 B-0801 // 拉斐尔·德拉克斯',
+        'tab-4': '绝密档案 EX-777 // No.777'
+      };
+
+      function setPopupTitle(title) {
+        if (popupFrame) {
+          popupFrame.style.setProperty('--popup-title', `'${title}'`);
+        } else {
+          console.error("Popup frame element not found for setting title.");
+        }
+      };
+
+      // Initialize title based on the initially active tab
+      const initialActiveButton = document.querySelector('.tab-button.active');
+      setPopupTitle(initialActiveButton ? (titleMap[initialActiveButton.id] || defaultTitle) : defaultTitle);
+
+
+      // ============= 通讯界面交互 =============
+      document.querySelectorAll('.comm-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const commInterface = button.closest('.comm-interface');
+          const messageBox = commInterface?.nextElementSibling; // Use optional chaining
+
+          if (commInterface && messageBox && messageBox.classList.contains('comm-message')) {
+            commInterface.style.display = 'none';
+            messageBox.style.display = 'block';
+            // --- Trigger height update ---
+            requestHeightUpdate();
+          } else {
+            console.error("Could not find communication interface or message box.");
+          }
+        });
+      });
+
+      document.querySelectorAll('.close-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const messageBox = button.closest('.comm-message');
+          const commInterface = messageBox?.previousElementSibling; // Use optional chaining
+
+          if (messageBox && commInterface && commInterface.classList.contains('comm-interface')) {
+            messageBox.style.display = 'none';
+            commInterface.style.display = 'block';
+            // --- Trigger height update ---
+            requestHeightUpdate();
+          } else {
+            console.error("Could not find message box or communication interface.");
+          }
+        });
+      });
+
+      // ============= 折叠栏交互逻辑 =============
+          // ============= 折叠栏交互逻辑 (恢复自动关闭其他项功能) =============
+      const accordionHeaders = document.querySelectorAll('.accordion-header'); // 获取所有头部
+
+      accordionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+          const content = header.nextElementSibling;
+          if (!content || !content.classList.contains('accordion-content')) {
+            console.error("Accordion content not found for header:", header);
+            return;
+          }
+
+          const currentlyActive = header.classList.contains('active');
+
+          // --- 新增：关闭所有其他已打开的折叠栏 ---
+          accordionHeaders.forEach(h => {
+            // 检查是否是其他头部 并且 它当前是打开的
+            if (h !== header && h.classList.contains('active')) {
+              h.classList.remove('active'); // 移除 active 类
+              const otherContent = h.nextElementSibling;
+              if (otherContent && otherContent.classList.contains('accordion-content')) {
+                otherContent.style.maxHeight = null; // 折叠内容
+              }
+            }
+          });
+          // --- 结束新增部分 ---
+
+          // 切换当前点击的折叠栏状态
+          // 如果当前点击的不是已经激活的，则激活它；如果是已激活的，则关闭它
+          if (!currentlyActive) {
+            header.classList.add('active');
+            content.style.maxHeight = content.scrollHeight + 'px';
+          } else {
+            // 如果点击的是已经激活的，则上面关闭其他项的循环不会处理它
+            // 这里需要手动移除 active 并折叠
+            header.classList.remove('active');
+            content.style.maxHeight = null;
+          }
+
+          // --- Trigger height update after accordion toggle ---
+          requestHeightUpdate();
+        });
+
+        // 初始化时确保非 active 的折叠栏是关闭的
+        const content = header.nextElementSibling;
+        if (content && !header.classList.contains('active')) {
+          content.style.maxHeight = null;
+        } else if (content && header.classList.contains('active')) {
+          // 如果某个折叠栏默认是 active 的，确保它展开
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }
+      });
+
+          // ============= 动态时间更新 =============
+      const timeDisplayElement = document.getElementById('current-tst-time');
+
+      /**
+       * 格式化时间单位，确保总是两位数 (例如 7 -> "07")
+       * @param {number} unit 时间单位 (小时, 分钟, 秒)
+       * @returns {string} 格式化后的两位字符串
+       */
+      function formatTimeUnit(unit) {
+        return unit < 10 ? '0' + unit : unit.toString();
+      }
+
+      /**
+       * 更新时间显示
+       */
+      function updateClock() {
+        if (!timeDisplayElement) {
+          // 如果元素找不到，停止更新以避免错误
+          console.error("Error: Time display element #current-tst-time not found.");
+          if (clockIntervalId) { // 如果定时器已启动，清除它
+            clearInterval(clockIntervalId);
+          }
+          return;
+        }
+
+        const now = new Date(); // 获取当前本地时间
+        const hours = formatTimeUnit(now.getHours());
+        const minutes = formatTimeUnit(now.getMinutes());
+        const seconds = formatTimeUnit(now.getSeconds());
+
+        const timeString = `${hours}:${minutes}:${seconds}`;
+        timeDisplayElement.textContent = timeString;
+      }
+
+      // 立即执行一次以显示初始时间
+      updateClock();
+
+      // 设置定时器，每秒 (1000毫秒) 调用一次 updateClock 函数
+      const clockIntervalId = setInterval(updateClock, 1000);
+
+      // 可选：如果页面关闭或离开，可以清除定时器以节省资源
+      window.addEventListener('beforeunload', () => {
+         clearInterval(clockIntervalId);
+      });
+      // --- 结束动态时间更新代码 ---
+
+    }); // End DOMContentLoaded
+
+  </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛博朋克音乐播放器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --cp-bg-dark: #0a0f25;
+      /* 深蓝紫背景 */
+      --cp-bg-medium: #1a1f3a;
+      --cp-neon-cyan: #00f0ff;
+      --cp-neon-magenta: #ff00ff;
+      --cp-text-primary: #e0e0ff;
+      --cp-text-secondary: #a0a0cc;
+      --cp-border-color: rgba(0, 240, 255, 0.3);
+      /* 青色边框 */
+      --cp-glow-cyan: 0 0 15px rgba(0, 240, 255, 0.5), 0 0 5px rgba(0, 240, 255, 0.7);
+      --cp-glow-magenta: 0 0 15px rgba(255, 0, 255, 0.5), 0 0 5px rgba(255, 0, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+      background-color: var(--cp-bg-dark);
+      color: var(--cp-text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .cyber-player {
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+      /* 控制播放器最大宽度 */
+      background: linear-gradient(145deg, var(--cp-bg-medium), #101530);
+      border: 1px solid var(--cp-border-color);
+      border-radius: 8px;
+      padding: 25px;
+      box-shadow: var(--cp-glow-cyan), inset 0 0 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      /* 隐藏可能溢出的辉光 */
+    }
+
+    /* 装饰性线条 */
+    .cyber-player::before,
+    .cyber-player::after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      background: var(--cp-neon-cyan);
+      box-shadow: var(--cp-glow-cyan);
+      opacity: 0.6;
+    }
+
+    .cyber-player::before {
+      top: 10px;
+      left: 10px;
+      width: 50px;
+    }
+
+    .cyber-player::after {
+      bottom: 10px;
+      right: 10px;
+      width: 50px;
+    }
+
+    .song-info {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .song-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: var(--cp-neon-magenta);
+      text-shadow: var(--cp-glow-magenta);
+      margin-bottom: 5px;
+      letter-spacing: 1px;
+    }
+
+    .song-artist {
+      font-size: 0.9em;
+      color: var(--cp-text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      /* 控制按钮间距 */
+      margin-bottom: 15px;
+    }
+
+    .control-button {
+      background: transparent;
+      border: 1px solid var(--cp-neon-cyan);
+      color: var(--cp-neon-cyan);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      /* 调整图标大小 */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: var(--cp-glow-cyan);
+      text-shadow: 0 0 5px var(--cp-neon-cyan);
+      line-height: 1;
+    }
+
+    .control-button:hover {
+      background-color: rgba(0, 240, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.7), 0 0 10px rgba(0, 240, 255, 0.9);
+      transform: scale(1.05);
+    }
+
+    .control-button:active {
+      transform: scale(0.95);
+    }
+
+    .play-pause-btn {
+      width: 55px;
+      /* 播放按钮稍大 */
+      height: 55px;
+      font-size: 1.8em;
+      border-color: var(--cp-neon-magenta);
+      color: var(--cp-neon-magenta);
+      box-shadow: var(--cp-glow-magenta);
+      text-shadow: 0 0 5px var(--cp-neon-magenta);
+    }
+
+    .play-pause-btn:hover {
+      background-color: rgba(255, 0, 255, 0.1);
+      box-shadow: 0 0 25px rgba(255, 0, 255, 0.7), 0 0 10px rgba(255, 0, 255, 0.9);
+    }
+
+
+    .progress-volume-area {
+      margin-bottom: 20px;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8em;
+      color: var(--cp-text-secondary);
+      margin-bottom: 5px;
+      padding: 0 5px;
+      /* 左右留白 */
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      overflow: hidden;
+      /* 隐藏进度条溢出 */
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cp-neon-magenta), var(--cp-neon-cyan));
+      border-radius: 3px;
+      transition: width 0.1s linear;
+      /* 平滑过渡 */
+      box-shadow: inset 0 0 5px rgba(0, 240, 255, 0.5);
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      /* 音量放右边 */
+      margin-top: 15px;
+      gap: 8px;
+    }
+
+    .volume-icon {
+      color: var(--cp-text-secondary);
+      font-size: 1em;
+      /* 可以用 SVG 或字体图标代替 */
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100px;
+      /* 音量条宽度 */
+      height: 4px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 2px;
+      cursor: pointer;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+    /* Webkit (Chrome, Safari) */
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--cp-neon-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: var(--cp-glow-cyan);
+      margin-top: -4px;
+      /* 垂直居中补偿 */
+    }
+
+    /* Firefox */
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: var(--cp-neon-cyan);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      /* Firefox 默认可能有边框 */
+      box-shadow: var(--cp-glow-cyan);
+    }
+
+    .volume-slider::-moz-range-track {
+      background: rgba(0, 0, 0, 0.4);
+      height: 4px;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+
+    .lyrics-container {
+      height: 150px;
+      /* 固定歌词区域高度 */
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--cp-border-color);
+      border-radius: 4px;
+      padding: 15px;
+      overflow-y: auto;
+      /* 超出高度则滚动 */
+      scroll-behavior: smooth;
+      /* 平滑滚动 */
+      text-align: center;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 自定义滚动条 (可选, Webkit) */
+    .lyrics-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .lyrics-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    .lyrics-container::-webkit-scrollbar-thumb {
+      background-color: var(--cp-neon-cyan);
+      border-radius: 3px;
+      box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .lyric-line {
+      padding: 8px 0;
+      font-size: 0.95em;
+      color: var(--cp-text-secondary);
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      line-height: 1.5;
+    }
+
+    .lyric-jpn,
+    .lyric-chn {
+      display: block;
+      /* 让每种语言占一行 */
+      transition: color 0.3s ease;
+      /* 平滑颜色过渡 */
+    }
+
+    .lyric-jpn {
+      font-size: 0.9em;
+      /* 日语可以稍小一点 */
+      color: var(--cp-text-secondary);
+      /* 非激活时次要颜色 */
+      opacity: 0.7;
+    }
+
+    .lyric-chn {
+      font-size: 1em;
+      /* 中文正常大小 */
+      color: var(--cp-text-primary);
+      /* 非激活时主要颜色 */
+      opacity: 0.8;
+    }
+
+    /* 激活行的样式 */
+    .lyric-line.active .lyric-jpn {
+      color: var(--cp-neon-magenta);
+      /* 激活时用高亮色 */
+      opacity: 1;
+      font-weight: bold;
+      /* 可以加粗 */
+      text-shadow: 0 0 5px var(--cp-neon-magenta);
+    }
+
+    .lyric-line.active .lyric-chn {
+      color: var(--cp-neon-cyan);
+      /* 激活时用另一种高亮色 */
+      opacity: 1;
+      font-weight: bold;
+      text-shadow: 0 0 5px var(--cp-neon-cyan);
+    }
+
+    /* 调整激活行的整体缩放和位置（如果需要） */
+    .lyric-line.active {
+      transform: scale(1.05);
+      /* 稍微放大激活行 */
+    }
+
+    /* 响应式调整 (可选) */
+    @media (max-width: 480px) {
+      .lyric-jpn {
+        font-size: 0.85em;
+      }
+
+      .lyric-chn {
+        font-size: 0.95em;
+      }
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 480px) {
+      .cyber-player {
+        padding: 15px;
+      }
+
+      .song-title {
+        font-size: 1.1em;
+      }
+
+      .control-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.3em;
+      }
+
+      .play-pause-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.6em;
+      }
+
+      .controls {
+        gap: 15px;
+      }
+
+      .lyrics-container {
+        height: 120px;
+        padding: 10px;
+      }
+
+      .lyric-line {
+        font-size: 0.9em;
+        padding: 6px 0;
+      }
+
+      .volume-slider {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="cyber-player">
+    <audio id="audio-player" src=""></audio> <!-- 音频元素 -->
+
+    <div class="song-info">
+      <div class="song-title" id="song-title">歌曲标题</div>
+      <div class="song-artist" id="song-artist">艺术家</div>
+    </div>
+
+    <div class="controls">
+      <button class="control-button prev-btn" aria-label="上一首">«</button>
+      <button class="control-button play-pause-btn" aria-label="播放/暂停">▶</button>
+      <button class="control-button next-btn" aria-label="下一首">»</button>
+    </div>
+
+    <div class="progress-volume-area">
+      <div class="time-display">
+        <span id="current-time">0:00</span>
+        <span id="total-time">0:00</span>
+      </div>
+      <div class="progress-container" id="progress-container">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="volume-control">
+        <span class="volume-icon">🔊</span> <!-- 简单音量图标 -->
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1"
+          aria-label="音量">
+      </div>
+    </div>
+
+    <div class="lyrics-container" id="lyrics-container">
+      <!-- 歌词将由 JS 动态加载 -->
+      <div class="lyric-line" style="opacity: 0.5;">加载歌词中...</div>
+    </div>
+  </div>
+
+  <script>
+    // --- DOM Elements ---
+    const audio = document.getElementById('audio-player');
+    const playPauseBtn = document.querySelector('.play-pause-btn');
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    const progressFill = document.getElementById('progress-fill');
+    const progressContainer = document.getElementById('progress-container');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalTimeEl = document.getElementById('total-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const lyricsContainer = document.getElementById('lyrics-container');
+    const songTitleEl = document.getElementById('song-title');
+    const songArtistEl = document.getElementById('song-artist');
+
+    // --- Song Data (示例 - 使用新格式) ---
+    const songs = [
+      {
+        title: "化身の獣", // 歌曲
+        artist: "Do As Infinity",
+        // 替换为你实际的音频文件 URL
+        src: "https://dlink.host/musics/aHR0cHM6Ly9vbmVkcnYtbXkuc2hhcmVwb2ludC5jb20vOnU6L2cvcGVyc29uYWwvc3Rvcl9vbmVkcnZfb25taWNyb3NvZnRfY29tL0VYSHNyZzNwZXBCTmduSzhwanhYZHdFQlFtZHhYcFZCTXJmUTBLX3NnSEp6LUE.mp3", // 请替换
+        // 替换为你实际的 LRC 歌词内容 (双语格式)
+        lrc: `[00:00.00]作词 : 伴都美子
+          [00:01.00]作曲 : 澤野弘之
+          [00:19.97]
+          [00:22.30]右隣の刃(やいば)を 撫でてる / 轻抚右手旁的剑刃
+          [00:27.40]我は何者か 何者だろうか / 我是谁 究竟是谁
+          [00:33.13]左に見据えた 未来に今 / 如今左侧是已看清的未来
+          [00:38.40]覚悟して挑む 荊道(いばらみち) とて / 下定决心挑战 踏入荆棘之路
+          [00:43.67]
+          [00:44.10]己の生き様さ / 这就是我的生存之道
+          [00:53.48]
+          [00:54.24]邪気足掻(じゃきあが)きの果て お前が見せた形相 / 伴着邪气挣扎的结局 是你伪装出的表象
+          [00:59.80]散り際の戯言 最期に一撃 くらわせる / 临终之际的戏言 让我蒙受最终一击
+          [01:05.31]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [01:10.68]求め喘ぐだけの ただの化獣だった / 只不过是刻意喘息着的 化身之兽
+          [01:16.57]
+          [01:17.03]再三 裏切り 愛に背き / 在爱的背后 是你反复地背叛
+          [01:21.90]満足気な笑み 品もありゃしない / 一脸满足的笑容 没有任何品性可言
+          [01:27.47]うつつを抜かした その代償 / 对这样的爱神魂颠倒 所承受的代价就是
+          [01:32.79]浮世の最果て 孤独な末裔(まつえい) / 在浮世的尽头 只剩下孤独的后裔
+          [01:38.16]
+          [01:38.68]お前の生き様さ / 这就是你的生存之道
+          [01:48.11]
+          [01:49.04]化けの皮剥がし お前が晒した本性 / 剥下那身羊皮 露出你的本性
+          [01:54.36]絆(ほだ)された身はただ 行くあてもなく彷徨う / 被束缚的身躯 只是没有目的地彷徨着
+          [01:59.86]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [02:05.26]牙を隠していた ただの化獣だった / 只不过是隐藏了獠牙的 化身之兽
+          [02:11.05]
+          [02:11.47]嗚呼、この世は / Ah… 浮世之间
+          [02:15.56]嗚呼、欲ばかり / Ah… 物欲横流
+          [02:21.16]
+          [02:33.82]嗚呼、 / Ah…
+          [02:35.45]化けの皮剥がし お前が晒した本性 / 剥下那身羊皮 露出你的本性
+          [02:40.65]絆(ほだ)された身はただ 行くあてもなく彷徨う / 被束缚的身躯 只是没有目的地彷徨着
+          [02:46.12]我、今暴いた この横たわる裸体は / 现在由我揭穿了 这具横亘的裸体
+          [02:51.61]牙を隠していた ただの化獣だった / 只不过是隐藏了獠牙的 化身之兽
+          [02:57.39]
+          [02:57.80]嗚呼、この世は / Ah… 浮世之间
+          [03:01.79]嗚呼、欲ばかり / Ah… 物欲横流
+          [03:07.39]
+          ` // 歌词示例，请替换
+      },
+      {
+        title: "名前のない怪物", // 示例歌曲
+        artist: "EGOIST",
+        src: "https://dlink.host/musics/aHR0cHM6Ly9vbmVkcnYtbXkuc2hhcmVwb2ludC5jb20vOnU6L2cvcGVyc29uYWwvc3Rvcl9vbmVkcnZfb25taWNyb3NvZnRfY29tL0VmazNBLVgwazZsSmphdlRzNUYzdnZBQmJlQVlwSFoxWmNheVBCakRfTUQ5WFE.mp3", // 请替换
+        lrc: `[00:00.00]作词 : ryo (supercell)
+          [00:01.00]作曲 : ryo (supercell)
+          [00:25.66]
+          [00:26.66]御伽話(フェアリーテイル)は / 童话故事
+          [00:32.01]さっき死んだみたい / 刚才如同死寂般
+          [00:37.41]煉瓦の病棟で / 在砖砌的病房里
+          [00:42.66]うまく歌えなくて / 嘶哑地哼着歌
+          [00:46.64]
+          [00:48.13]霧に煙る夜 / 浮现在烟雾弥漫的夜里
+          [00:53.43]浮かべ赤い月 / 腥红的月亮
+          [00:58.63]ほらみて私を / 看着我
+          [01:04.02]目を逸らさないで / 眼神不要逃开
+          [01:07.99]
+          [01:09.92]黒い鉄格子の中で / 黑色的铁盒子中
+          [01:12.84]私は生まれてきたんだ / 我如此诞生了
+          [01:15.40]悪意の代償を願え / 用恶意的代价来完成愿望
+          [01:17.78]望むがままにお前に / 就像你所希望的那样
+          [01:21.06]さあ与えよう正義を / 来吧，都给与你
+          [01:23.45]壊して壊される前に / 在正义崩坏之前
+          [01:26.16]因果の代償を払い / 去偿还因果的代价
+          [01:28.56]共に行こう / 一起同行
+          [01:29.73]名前のない怪物 / 没有名字的怪物
+          [01:37.06]
+          [01:45.75]
+          [01:46.75]耳鳴りがしてる / 铁丝网的声音
+          [01:52.01]鉄条網うるさくって / 在耳中嗡嗡作响
+          [01:57.32]思い出せないの / 想不起来吗
+          [02:02.65]あの日の旋律 / 那天的旋律
+          [02:06.53]
+          [02:08.02]雨はまだ止まない / 雨还未停
+          [02:13.25]何にも見えないの / 什么也看不见吗
+          [02:18.50]ほらみてこんなに / 可是你看
+          [02:24.00]大きくなったの / 不是已经变得如此巨大了吗
+          [02:27.96]
+          [02:30.03]黒い雨降らせこの空 / 天空降下黑色的雨滴
+          [02:32.80]私は望まれないもの / 我是不被寄望之物
+          [02:35.51]ひび割れたノイローゼ / 破碎不堪的神经官能
+          [02:37.54]愛す同罪の傍観者達に / 与被爱同罪的旁观者们
+          [02:41.01]さあ今ふるえ正義を / 来吧，让正义振作起来
+          [02:43.43]消せない傷を抱きしめて / 坦率面对这不会消失的疤痕
+          [02:46.09]この身体を受け入れ / 接受这副躯壳
+          [02:48.50]共に行こう / 一起同行
+          [02:49.71]名前のない怪物 / 没有名字的怪物
+          [02:56.22]
+          [03:11.95]
+          [03:12.95]ああ / 啊
+          [03:15.49]神ハ告ゲル / 神明宣告着
+          [03:25.37]真ノ世界ヲ / 这个真实的世界
+          [03:34.54]
+          [03:54.57]
+          [03:55.57]黒い鉄格子の中で / 黑色的铁盒子中
+          [03:58.11]私は生まれてきたんだ / 我如此诞生了
+          [04:00.71]悪意の代償を願え / 用恶意的代价来完成愿望
+          [04:03.28]望むがままにお前に / 就像你所希望的那样
+          [04:06.12]さあ与えよう正義を / 来吧，都给与你
+          [04:08.83]壊して壊される前に / 在正义崩坏之前
+          [04:11.36]因果の代償を払い / 偿还因果的代价
+          [04:13.98]報いよ名もなき怪物 / 这就是报应，连名字也没有的怪物
+          [04:15.95]
+          [04:16.95]黒い雨降らせこの空 / 天空降下黑色的雨滴
+          [04:19.42]私は望まれないもの / 我是不被寄望之物
+          [04:22.01]ひび割れたノイローゼ / 破碎不堪的神经官能
+          [04:24.21]愛す同罪の傍観者達に / 与被爱同罪的旁观者们
+          [04:27.57]さあ今ふるえ正義を / 来吧，让正义振作起来
+          [04:30.17]消せない傷を抱きしめて / 坦率面对这不会消失的疤痕
+          [04:32.83]この身体を受け入れ / 接受这副躯壳
+          [04:35.20]共に行こう / 一起同行
+          [04:36.38]名前のない怪物 / 没有名字的怪物
+          [04:43.37]
+          [05:00.62]` // 歌词示例，请替换
+      }
+      // 可以继续添加更多歌曲对象
+    ];
+
+    let currentSongIndex = 0;
+    let parsedLyrics = []; // 存储当前歌曲解析后的歌词
+    let isPlaying = false;
+
+    // --- Utility Functions ---
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00'; // 处理 NaN
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // --- LRC Parser (修改版) ---
+    function parseLRC(lrcText) {
+      if (!lrcText) return [];
+      const lines = lrcText.split('\n');
+      const result = [];
+      const timeRegex = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\]/; // 匹配时间
+
+      lines.forEach(line => {
+        const timeMatch = line.match(timeRegex);
+        if (timeMatch) {
+          const minutes = parseInt(timeMatch[1], 10);
+          const seconds = parseFloat(timeMatch[2]);
+          const time = minutes * 60 + seconds;
+          const textContent = line.replace(timeRegex, '').trim(); // 获取时间标签后的文本
+
+          if (textContent) {
+            const parts = textContent.split('/'); // 用 / 分割语言
+            const jpn = parts[0]?.trim() || ''; // 日语部分，不存在则为空字符串
+            const chn = parts[1]?.trim() || ''; // 中文部分，不存在则为空字符串
+
+            // 确保至少有一部分歌词存在
+            if (jpn || chn) {
+              result.push({ time, jpn, chn });
+            }
+          } else {
+            // 如果时间标签后没有文本，可以添加一个空行或标记
+            // result.push({ time, jpn: '', chn: '' }); // 或者不添加
+          }
+        }
+      });
+      return result.sort((a, b) => a.time - b.time);
+    }
+
+    // --- Load Song ---
+    function loadSong(index) {
+      const song = songs[index];
+      songTitleEl.textContent = song.title;
+      songArtistEl.textContent = song.artist;
+      audio.src = song.src;
+      parsedLyrics = parseLRC(song.lrc);
+      renderLyrics(); // 渲染歌词
+      // 重置播放器状态
+      progressFill.style.width = '0%';
+      currentTimeEl.textContent = '0:00';
+      totalTimeEl.textContent = '0:00';
+      // 总时长需在音频加载元数据后更新
+    }
+
+    // --- Render Lyrics (修改版) ---
+    function renderLyrics() {
+      lyricsContainer.innerHTML = ''; // 清空旧歌词
+      if (parsedLyrics.length === 0) {
+        lyricsContainer.innerHTML = '<div class="lyric-line" style="opacity: 0.5;">无歌词信息</div>';
+        return;
+      }
+      parsedLyrics.forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line';
+        div.dataset.time = line.time;
+
+        // 根据是否存在日语和中文部分来创建 span
+        if (line.jpn) {
+          const jpnSpan = document.createElement('span');
+          jpnSpan.className = 'lyric-jpn'; // 添加类名
+          jpnSpan.textContent = line.jpn;
+          div.appendChild(jpnSpan);
+        }
+        if (line.chn) {
+          const chnSpan = document.createElement('span');
+          chnSpan.className = 'lyric-chn'; // 添加类名
+          chnSpan.textContent = line.chn;
+          div.appendChild(chnSpan);
+        }
+        // 如果 div 仍然是空的 (理论上不会，因为 parseLRC 做了检查)，可以跳过添加
+        if (div.hasChildNodes()) {
+          lyricsContainer.appendChild(div);
+        }
+      });
+    }
+
+    // --- Update Lyrics Highlight & Scroll (保持不变) ---
+    function updateLyrics() {
+      const currentTime = audio.currentTime;
+      const lines = lyricsContainer.querySelectorAll('.lyric-line');
+      if (lines.length === 0) return;
+
+      let activeIndex = -1;
+      // 使用 dataset.time 来比较，因为 parsedLyrics 的索引可能和 lines 不完全对应（如果跳过了空行）
+      lines.forEach((line, index) => {
+        const lineTime = parseFloat(line.dataset.time);
+        if (!isNaN(lineTime) && currentTime >= lineTime) {
+          activeIndex = index;
+        }
+      });
+
+      lines.forEach((line, index) => {
+        line.classList.toggle('active', index === activeIndex);
+      });
+
+      // Auto-scroll
+      if (activeIndex > -1) {
+        const activeLine = lines[activeIndex];
+        if (activeLine) {
+          const containerHeight = lyricsContainer.clientHeight;
+          const lineTop = activeLine.offsetTop - lyricsContainer.offsetTop; // Relative to container
+          const lineCenter = lineTop + activeLine.clientHeight / 2;
+          const scrollTarget = lineCenter - containerHeight / 2;
+
+          lyricsContainer.scrollTo({
+            top: Math.max(0, scrollTarget),
+            behavior: 'smooth'
+          });
+        }
+      } else {
+        lyricsContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+
+    // --- Player Controls (保持不变) ---
+    function playSong() {
+      audio.play().then(() => {
+        isPlaying = true;
+        playPauseBtn.textContent = '❚❚'; // Pause symbol
+        playPauseBtn.setAttribute('aria-label', '暂停');
+      }).catch(error => {
+        console.error("播放错误:", error);
+      });
+    }
+
+    function pauseSong() {
+      audio.pause();
+      isPlaying = false;
+      playPauseBtn.textContent = '▶'; // Play symbol
+      playPauseBtn.setAttribute('aria-label', '播放');
+    }
+
+    function prevSong() {
+      currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    }
+
+    function nextSong() {
+      currentSongIndex = (currentSongIndex + 1) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    }
+
+    // --- Update Progress Bar & Time (保持不变) ---
+    function updateProgress() {
+      if (audio.duration) {
+        const progressPercent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${progressPercent}%`;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      }
+      updateLyrics(); // Update lyrics highlight on time update
+    }
+
+    function setProgress(e) {
+      const width = progressContainer.clientWidth;
+      const clickX = e.offsetX;
+      if (audio.duration) {
+        audio.currentTime = (clickX / width) * audio.duration;
+      }
+    }
+
+    // --- Event Listeners (保持不变) ---
+    playPauseBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        pauseSong();
+      } else {
+        playSong();
+      }
+    });
+
+    prevBtn.addEventListener('click', prevSong);
+    nextBtn.addEventListener('click', nextSong);
+
+    audio.addEventListener('timeupdate', updateProgress);
+
+    audio.addEventListener('loadedmetadata', () => {
+      totalTimeEl.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener('ended', nextSong);
+
+    progressContainer.addEventListener('click', setProgress);
+
+    volumeSlider.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+
+    // --- Initial Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSong(currentSongIndex);
+      audio.volume = volumeSlider.value;
+    });
+
+  </script>
