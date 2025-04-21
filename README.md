@@ -12,6 +12,6 @@ audio cyber.html - 赛博朋克霓虹风格，适用于中日双语歌词
 
 ## 2025-4-21 上传了一份完整的代码，包括HTML+CSS+JS内容
 
-暗戳戳推一下自己的卡[监狱4+1|泰坦诸神，永堕塔尔塔罗斯]("https://chat.mufy.ai/chat?roleId=29fc007a-cdcd-4ab9-bb69-323937fa841d")
+暗戳戳推一下自己的卡→[监狱4+1|泰坦诸神，永堕塔尔塔罗斯](https://chat.mufy.ai/chat?roleId=29fc007a-cdcd-4ab9-bb69-323937fa841d)
 
 因为有人发现自己的代码塞进小剧场里用不了，用作参考对比
