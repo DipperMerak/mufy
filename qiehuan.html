@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>双面档案</title>
+  <style>
+    /* --- Fonts --- */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    /* Ins Style Font */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:ital,wght@0,400;0,700;1,400&display=swap');
+    /* Racing Style Font */
+
+    :root {
+      /* Light Theme (Ins Style) */
+      --bg-light: #ffffff;
+      --text-light-primary: #333333;
+      --text-light-secondary: #777777;
+      --accent-light: #f8b4c4;
+      /* Soft Pink/Peach */
+      --border-light: #e0e0e0;
+      --card-bg-light: #f9f9f9;
+
+      /* Dark Theme (F1 Racing Style) */
+      --bg-dark: #121212;
+      /* Deep Dark Gray */
+      --text-dark-primary: #e5e5e5;
+      --text-dark-secondary: #aaaaaa;
+      --accent-dark-primary: #FF1801;
+      /* Ferrari Red / Bright Red */
+      --accent-dark-secondary: #00D2BE;
+      /* Teal/Cyan Accent */
+      --border-dark: #333333;
+      --card-bg-dark: #1e1e1e;
+
+      /* Transition */
+      --theme-transition-duration: 0.5s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Default to light */
+      background-color: var(--bg-light);
+      color: var(--text-light-primary);
+      transition: background-color var(--theme-transition-duration) ease,
+        color var(--theme-transition-duration) ease;
+      padding: 15px;
+      font-family: 'Poppins', sans-serif;
+      /* Default Font */
+    }
+
+    /* Theme Classes on Body */
+    body.theme-light {
+      background-color: var(--bg-light);
+      color: var(--text-light-primary);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body.theme-dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark-primary);
+      font-family: 'Exo 2', sans-serif;
+      /* Different font for dark theme */
+    }
+
+    /* --- Page Container --- */
+    .profile-wrapper {
+      max-width: 900px;
+      margin: 15px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: background-color var(--theme-transition-duration) ease,
+        border-color var(--theme-transition-duration) ease;
+      border: 1px solid var(--border-light);
+      /* Start with light border */
+    }
+
+    body.theme-light .profile-wrapper {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-color: var(--border-light);
+    }
+
+    body.theme-dark .profile-wrapper {
+      background-color: rgba(30, 30, 30, 0.9);
+      /* Dark semi-transparent */
+      border-color: var(--border-dark);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* --- Page Content Visibility --- */
+    .page-content {
+      display: none;
+      animation: contentFadeIn 0.5s ease-out;
+    }
+
+    .page-content.active {
+      display: block;
+    }
+
+    @keyframes contentFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- Divider --- */
+    hr.divider {
+      border: none;
+      height: 1px;
+      margin: 30px 0;
+      transition: background-image var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light hr.divider {
+      background-image: linear-gradient(to right, transparent, var(--border-light), transparent);
+    }
+
+    body.theme-dark hr.divider {
+      background-image: linear-gradient(to right, transparent, var(--border-dark), transparent);
+    }
+
+
+    /* ============================== */
+    /* === Profile Section Styles === */
+    /* ============================== */
+    .profile-section {
+      display: flex;
+      align-items: center;
+      /* Vertically center align */
+      gap: 25px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      transition: border-color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .profile-section {
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    body.theme-dark .profile-section {
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .profile-image-container {
+      flex-shrink: 0;
+      width: 150px;
+      /* Adjust size as needed */
+      height: 150px;
+      border-radius: 50%;
+      /* Ins style: Circle */
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: border-radius var(--theme-transition-duration) ease,
+        border var(--theme-transition-duration) ease;
+    }
+
+    body.theme-dark .profile-image-container {
+      width:120px;
+      height: 160px;
+      border-radius: 4px;
+      /* F1 style: Square-ish */
+      border: 2px solid var(--accent-dark-secondary);
+      /* Accent border */
+      box-shadow: 0 0 10px rgba(0, 210, 190, 0.3);
+      /* Accent glow */
+    }
+
+    .profile-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    body.theme-dark .profile-image {
+      filter: saturate(1.1) contrast(1.05);
+      /* Slightly enhance colors for dark theme */
+    }
+
+    .profile-info h2 {
+      margin: 0 0 10px 0;
+      font-weight: 600;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .profile-info h2 {
+      font-size: 1.8em;
+      color: var(--text-light-primary);
+    }
+
+    body.theme-dark .profile-info h2 {
+      font-family: 'Orbitron', sans-serif;
+      /* Racing font for title */
+      font-size: 2em;
+      color: var(--accent-dark-primary);
+      /* Red accent */
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(255, 24, 1, 0.5);
+    }
+
+    .profile-info p {
+      font-size: 0.95em;
+      margin-bottom: 5px;
+      line-height: 1.6;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .profile-info p {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .profile-info p {
+      color: var(--text-dark-secondary);
+    }
+
+    body.theme-dark .profile-info p strong {
+      font-style: italic;
+    }
+
+    /* Italic labels in dark */
+
+    .profile-info strong {
+      font-weight: 600;
+      margin-right: 8px;
+      display: inline-block;
+      min-width: 70px;
+      /* Adjust for label alignment */
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .profile-info strong {
+      color: var(--text-light-primary);
+    }
+
+    body.theme-dark .profile-info strong {
+      color: var(--text-dark-primary);
+    }
+
+    /* Mobile: Keep horizontal alignment */
+    @media (max-width: 600px) {
+      .profile-section {
+        gap: 15px;
+        /* Reduce gap */
+      }
+
+      .profile-image-container {
+        width: 100px;
+        /* Smaller image */
+        height: 100px;
+      }
+
+      .profile-info h2 {
+        font-size: 1.4em;
+        /* Smaller title */
+        margin-bottom: 5px;
+      }
+
+      body.theme-dark .profile-info h2 {
+        font-size: 1.5em;
+      }
+
+      .profile-info p {
+        font-size: 0.85em;
+        /* Smaller text */
+        line-height: 1.5;
+      }
+
+      .profile-info strong {
+        min-width: 55px;
+      }
+    }
+
+    @media (max-width: 400px) {
+
+      /* Very small screens */
+      .profile-image-container {
+        width: 80px;
+        height: 80px;
+      }
+
+      .profile-info h2 {
+        font-size: 1.2em;
+      }
+
+      body.theme-dark .profile-info h2 {
+        font-size: 1.3em;
+      }
+
+      .profile-info p {
+        font-size: 0.8em;
+      }
+
+      .profile-info strong {
+        min-width: 50px;
+        margin-right: 4px;
+      }
+    }
+
+
+    /* ============================== */
+    /* === Announcement Box Styles === */
+    /* ============================== */
+    .announcement-box {
+      padding: 15px 20px;
+      margin: 30px 0;
+      border-radius: 6px;
+      transition: background-color var(--theme-transition-duration) ease,
+        border var(--theme-transition-duration) ease,
+        box-shadow var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .announcement-box {
+      background-color: var(--card-bg-light);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    body.theme-dark .announcement-box {
+      background-color: var(--card-bg-dark);
+      border: 1px solid var(--border-dark);
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .announcement-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      transition: color var(--theme-transition-duration) ease,
+        border-color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .announcement-title {
+      font-size: 1.2em;
+      color: var(--text-light-primary);
+      border-bottom: 1px dashed var(--border-light);
+    }
+
+    body.theme-dark .announcement-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3em;
+      color: var(--accent-dark-secondary);
+      /* Teal title */
+      border-bottom: 1px solid var(--accent-dark-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .announcement-content p {
+      font-size: 0.9em;
+      margin-bottom: 0.8em;
+      line-height: 1.7;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .announcement-content p {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .announcement-content p {
+      color: var(--text-dark-secondary);
+    }
+
+    .announcement-content p:last-child {
+      margin-bottom: 0;
+    }
+
+
+    /* ============================== */
+    /* === Collapsible Styles === */
+    /* ============================== */
+    .collapsible-section {
+      margin-top: 20px;
+    }
+
+    .collapsible-item {
+      margin-bottom: 10px;
+      border-radius: 4px;
+      overflow: hidden;
+      /* Crucial for border-radius */
+      transition: background-color var(--theme-transition-duration) ease,
+        border var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .collapsible-item {
+      border: 1px solid var(--border-light);
+      background-color: #fff;
+    }
+
+    body.theme-dark .collapsible-item {
+      border: 1px solid var(--border-dark);
+      background-color: var(--card-bg-dark);
+    }
+
+
+    .collapsible-header {
+      background-color: transparent;
+      /* Handled by item */
+      color: inherit;
+      /* Inherit color from body theme */
+      cursor: pointer;
+      padding: 12px 15px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 1.1em;
+      font-weight: 600;
+      position: relative;
+      transition: background-color 0.3s, color var(--theme-transition-duration) ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    body.theme-light .collapsible-header:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    body.theme-dark .collapsible-header:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Header indicator styling */
+    .collapsible-header::after {
+      content: '+';
+      font-size: 1.2em;
+      font-weight: bold;
+      transition: transform 0.3s ease, color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .collapsible-header::after {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .collapsible-header::after {
+      color: var(--accent-dark-secondary);
+      content: '>';
+      font-size: 1em;
+    }
+
+    /* Different indicator */
+
+    .collapsible-header.active::after {
+      transform: rotate(45deg);
+    }
+
+    body.theme-dark .collapsible-header.active::after {
+      transform: rotate(90deg);
+      color: var(--accent-dark-primary);
+    }
+
+    /* Active Header Style */
+    .collapsible-header.active {
+      /* Optional: slightly change background or text color when active */
+    }
+
+    body.theme-light .collapsible-header.active {
+      color: var(--accent-light);
+    }
+
+    body.theme-dark .collapsible-header.active {
+      color: var(--accent-dark-primary);
+    }
+
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, 
+                  padding 0.4s ease-out;
+      padding: 0 15px;
+      background-color: transparent;
+      /* Use item bg */
+      border-top: 1px solid transparent;
+      /* Separator line appears when open */
+      transition: border-color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .collapsible-content.show {
+      border-top-color: var(--border-light);
+    }
+
+    body.theme-dark .collapsible-content.show {
+      border-top-color: var(--border-dark);
+    }
+
+
+    .collapsible-content.show {
+      padding: 15px;
+      /* Padding appears when open */
+    }
+
+    .collapsible-content p {
+      font-size: 0.9em;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .collapsible-content p {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .collapsible-content p {
+      color: var(--text-dark-secondary);
+    }
+
+    .collapsible-content p:last-child {
+      margin-bottom: 0;
+    }
+
+
+    /* ============================== */
+    /* === Music Player Styles === (Optional) */
+    /* ============================== */
+    .music-player {
+      margin-top: 30px;
+      padding: 15px;
+      border-radius: 6px;
+      transition: background-color var(--theme-transition-duration) ease,
+        border var(--theme-transition-duration) ease;
+    }
+
+    /* Light Theme Player */
+    body.theme-light .music-player {
+      background-color: var(--card-bg-light);
+      border: 1px solid var(--border-light);
+    }
+
+    /* Dark Theme Player */
+    body.theme-dark .music-player {
+      background: linear-gradient(145deg, #222, #111);
+      border: 1px solid var(--border-dark);
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .player-song-info {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .player-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-bottom: 3px;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    .player-artist {
+      font-size: 0.85em;
+      opacity: 0.8;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .player-title {
+      color: var(--text-light-primary);
+    }
+
+    body.theme-light .player-artist {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .player-title {
+      color: var(--text-dark-primary);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body.theme-dark .player-artist {
+      color: var(--text-dark-secondary);
+    }
+
+
+    .player-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .player-btn {
+      background: transparent;
+      border: 1px solid;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      font-size: 1em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    body.theme-light .player-btn {
+      border-color: var(--border-light);
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-light .player-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--text-light-primary);
+    }
+
+    body.theme-dark .player-btn {
+      border-color: var(--border-dark);
+      color: var(--text-dark-secondary);
+    }
+
+    body.theme-dark .player-btn:hover {
+      border-color: var(--accent-dark-secondary);
+      color: var(--accent-dark-secondary);
+      background-color: rgba(0, 210, 190, 0.1);
+    }
+
+    .player-play-pause {
+      width: 45px;
+      height: 45px;
+      font-size: 1.3em;
+    }
+
+    body.theme-light .player-play-pause {
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+    }
+
+    body.theme-light .player-play-pause:hover {
+      background-color: rgba(248, 180, 196, 0.1);
+    }
+
+    body.theme-dark .player-play-pause {
+      border-color: var(--accent-dark-primary);
+      color: var(--accent-dark-primary);
+    }
+
+    body.theme-dark .player-play-pause:hover {
+      border-color: #ff4d4d;
+      color: #ff4d4d;
+      background-color: rgba(255, 24, 1, 0.1);
+    }
+
+
+    .player-progress-area {
+      margin-top: 10px;
+    }
+
+    .player-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75em;
+      margin-bottom: 3px;
+      padding: 0 2px;
+      transition: color var(--theme-transition-duration) ease;
+    }
+
+    body.theme-light .player-time {
+      color: var(--text-light-secondary);
+    }
+
+    body.theme-dark .player-time {
+      color: var(--text-dark-secondary);
+    }
+
+    .player-progress-bar {
+      height: 4px;
+      border-radius: 2px;
+      background-color: rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+
+    body.theme-dark .player-progress-bar {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .player-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    body.theme-light .player-progress-fill {
+      background-color: var(--accent-light);
+    }
+
+    body.theme-dark .player-progress-fill {
+      background: linear-gradient(90deg, var(--accent-dark-secondary), var(--accent-dark-primary));
+    }
+
+    /* Gradient fill */
+
+    /* ============================== */
+    /* === Music Player Lyrics Styles === */
+    /* ============================== */
+    .lyrics-container {
+        height: 160px; /* 歌词区域高度 */
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 4px;
+        overflow: hidden; /* 隐藏滚动条，用 JS 控制 */
+        position: relative;
+        text-align: center;
+        transition: background-color var(--theme-transition-duration) ease,
+                    border var(--theme-transition-duration) ease;
+    }
+    body.theme-light .lyrics-container {
+        background-color: rgba(0,0,0,0.02);
+        border: 1px solid var(--border-light);
+    }
+    body.theme-dark .lyrics-container {
+        background-color: rgba(0,0,0,0.2);
+        border: 1px solid var(--border-dark);
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+    }
+
+    .lyrics-scroll-content {
+        width: 100%;
+        position: absolute; /* 改为绝对定位方便 transform */
+        top: 0;
+        left: 0;
+        transition: transform 0.5s ease-out; /* 平滑滚动 */
+    }
+
+    .lyric-line {
+        padding: 10px 5px; /* 行间距 */
+        font-size: 1em; /* 调整歌词大小 */
+        opacity: 0.5;
+        transform: scale(0.95);
+        transition: all 0.4s ease-out;
+        line-height: 1.5;
+    }
+    body.theme-light .lyric-line { color: var(--text-light-secondary); }
+    body.theme-dark .lyric-line { color: var(--text-dark-secondary); }
+
+    .lyric-line.active {
+        opacity: 1;
+        transform: scale(1);
+        font-weight: 600; /* 加粗激活行 */
+    }
+    body.theme-light .lyric-line.active { color: var(--accent-light); }
+    body.theme-dark .lyric-line.active { color: var(--accent-dark-secondary); } /* 使用 Teal/Cyan */
+
+
+    /* --- Switch Button --- */
+    .theme-switch-button {
+    position: fixed;
+    bottom: 20px;
+    /* 改为左上角或右上角 */
+    top: 0px;
+    right: 0px;
+    bottom: auto; /* 移除 bottom */
+
+    padding: 8px 15px; /* 调整按钮大小 */
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 1000;
+    border: 1px solid;
+    transition: all var(--theme-transition-duration) ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    font-size: 0.85em; /* 稍小一点 */
+    position: relative; /* 为了定位红点 */
+    }
+    body.theme-light .theme-switch-button {
+        background-color: var(--text-light-primary);
+        color: var(--bg-light);
+        border-color: var(--text-light-primary);
+    }
+    body.theme-dark .theme-switch-button {
+        background-color: var(--text-dark-primary);
+        color: var(--bg-dark);
+        border-color: var(--text-dark-primary);
+    }
+    .theme-switch-button:hover { opacity: 0.9; transform: scale(1.03); }
+
+    /* --- 红点效果 --- */
+    .theme-switch-button::after {
+        content: '';
+        position: absolute;
+        top: -4px; /* 调整红点位置 */
+        right: -6px;
+        width: 15px;
+        height: 15px;
+        background-color: #ff3b30; /* iOS 风格的红色 */
+        border-radius: 50%;
+        border: 1px solid white; /* 加个白边更明显 */
+        /* 默认隐藏，只在特定主题下显示 */
+        display: none; /* 默认隐藏 */
+        animation: pulse 1.5s infinite ease-in-out; /* 添加呼吸动画 */
+    }
+
+    /* 只在浅色主题时显示红点 (提示可以切换到深色) */
+    body.theme-light .theme-switch-button::after {
+        display: block;
+    }
+
+    /* (可选) 如果你想在深色主题提示切换回浅色，也取消注释下面这行 */
+    body.theme-dark .theme-switch-button::after { display: block; }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(255, 59, 48, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+    }
+
+    /* ============================== */
+    /* === Player Controls Layout & Style === */
+    /* ============================== */
+
+    .controls {
+        display: flex;
+        justify-content: center; /* 水平居中按钮 */
+        align-items: center;     /* 垂直居中按钮 */
+        gap: 20px;               /* 按钮之间的间距 */
+        margin-top: 20px;       /* 控制区与上方元素的间距 */
+        margin-bottom: 10px;    /* 控制区与下方元素的间距 (如果下方有元素) */
+    }
+
+    /* --- 通用按钮基础样式 --- */
+    .player-btn {
+        background: transparent;
+        border: 1px solid; /* 边框颜色由主题决定 */
+        border-radius: 50%; /* 圆形 */
+        width: 40px;       /* 标准按钮大小 */
+        height: 40px;
+        font-size: 1.2em;   /* 图标/文字大小 */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+        line-height: 1;     /* 确保文字垂直居中 */
+        padding: 0;         /* 移除内边距 */
+    }
+
+    .player-btn:active {
+        transform: scale(0.95); /* 点击反馈 */
+    }
+
+    /* --- 播放/暂停按钮 (通常更突出) --- */
+    .player-play-pause {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5em;
+    }
+
+    /* --- Light Theme Button Styles --- */
+    body.theme-light .player-btn {
+        border-color: var(--border-light);
+        color: var(--text-light-secondary);
+    }
+    body.theme-light .player-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-color: var(--text-light-secondary);
+        color: var(--text-light-primary);
+    }
+    body.theme-light .player-play-pause {
+        border-color: var(--accent-light);
+        color: var(--accent-light);
+    }
+    body.theme-light .player-play-pause:hover {
+        background-color: rgba(248, 180, 196, 0.1); /* 淡粉色背景 */
+        border-color: #f09aaa; /* 稍深一点的粉色 */
+        color: #f09aaa;
+    }
+    body.theme-light .player-loop.active { /* 浅色主题循环激活 */
+        background-color: var(--accent-light);
+        border-color: var(--accent-light);
+        color: white;
+        font-weight: bold;
+    }
+
+
+    /* --- Dark Theme Button Styles (Racing) --- */
+    body.theme-dark .player-btn {
+        border-color: var(--border-dark);
+        color: var(--text-dark-secondary);
+        box-shadow: 0 0 3px rgba(40, 40, 40, 0.5); /* 轻微阴影 */
+    }
+    body.theme-dark .player-btn:hover {
+        border-color: var(--accent-dark-secondary); /* 悬停时边框变Teal */
+        color: var(--accent-dark-secondary);
+        background-color: rgba(0, 210, 190, 0.08); /* 轻微Teal背景 */
+        box-shadow: 0 0 8px rgba(0, 210, 190, 0.3); /* Teal辉光 */
+    }
+    body.theme-dark .player-play-pause {
+        border-color: var(--accent-dark-primary); /* 红色边框 */
+        color: var(--accent-dark-primary); /* 红色图标 */
+        box-shadow: 0 0 5px rgba(255, 24, 1, 0.4); /* 红色辉光 */
+    }
+    body.theme-dark .player-play-pause:hover {
+        border-color: #ff4d4d; /* 更亮的红色 */
+        color: #ff4d4d;
+        background-color: rgba(255, 24, 1, 0.1); /* 轻微红色背景 */
+        box-shadow: 0 0 12px rgba(255, 24, 1, 0.6); /* 更强红色辉光 */
+    }
+    body.theme-dark .player-loop.active { /* 深色主题循环激活 */
+        background-color: var(--accent-dark-primary); /* 红色背景 */
+        border-color: var(--accent-dark-primary);
+        color: var(--text-dark-primary); /* 白色或浅灰色文字 */
+        box-shadow: 0 0 8px rgba(255, 24, 1, 0.5);
+        font-weight: bold;
+    }
+
+    /* --- 响应式调整按钮大小和间距 --- */
+    @media (max-width: 480px) {
+        .controls {
+            gap: 15px; /* 减小手机上的间距 */
+        }
+        .player-btn {
+            width: 35px;
+            height: 35px;
+            font-size: 1.1em;
+        }
+        .player-play-pause {
+            width: 45px;
+            height: 45px;
+            font-size: 1.3em;
+        }
+    }
+
+    /* --- Lyric Span Styles --- */
+    .lyric-line span {
+        display: block; /* 让每个语言部分占一行 */
+        transition: color 0.3s ease, opacity 0.3s ease; /* 平滑颜色/透明度过渡 */
+    }
+
+    /* 默认状态下的语言样式 (可以根据需要调整) */
+    body.theme-light .lyric-jpn { font-size: 0.9em; color: var(--text-light-secondary); opacity: 0.8; }
+    body.theme-light .lyric-chn { font-size: 1em; color: var(--text-light-secondary); } /* 中文默认稍暗 */
+
+    body.theme-dark .lyric-jpn { font-size: 0.9em; color: var(--text-dark-secondary); opacity: 0.8; }
+    body.theme-dark .lyric-chn { font-size: 1em; color: var(--text-dark-secondary); }
+
+
+    /* 激活状态下的语言样式 */
+    .lyric-line.active {
+        /* 激活行的整体样式已在之前定义 (加粗, scale, etc) */
+    }
+
+    /* 激活行内特定语言的高亮 */
+    body.theme-light .lyric-line.active .lyric-jpn {
+        color: var(--accent-light); /* 浅色主题下，用强调色高亮 */
+        opacity: 1;
+    }
+    body.theme-light .lyric-line.active .lyric-chn {
+        color: var(--text-light-primary); /* 浅色主题下，用主文本色高亮 */
+        opacity: 1;
+    }
+
+    body.theme-dark .lyric-line.active .lyric-jpn {
+        color: var(--accent-dark-secondary); /* 深色主题下，用 Teal 高亮 */
+        opacity: 1;
+        text-shadow: 0 0 3px rgba(0, 210, 190, 0.4);
+    }
+    body.theme-dark .lyric-line.active .lyric-chn {
+        color: var(--text-dark-primary); /* 深色主题下，用主文本色高亮 */
+        opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="theme-light"> <!-- Start with Light Theme -->
+<!-- Switch Button -->
+<button id="theme-switch" class="theme-switch-button">切换到黑色主题</button>
+
+  <div class="profile-wrapper">
+    <!-- Page A Content (Light/Ins) -->
+    <div id="page-a" class="page-content active">
+      <section class="announcement-box">
+        <h3 class="announcement-title">这是标题</h3>
+        <div class="announcement-content">
+          <p>这是内容</p>
+        </div>
+      </section>
+      
+      <hr class="divider">
+
+      <section class="profile-section">
+        <div class="profile-image-container">
+          <img src="https://img.picgo.net/2025/04/25/2025-04-24T15.03.25_146024c7a5ecaab7d.jpg" alt="Elias肖像" class="profile-image">
+        </div>
+        <div class="profile-info">
+          <h2>人名</h2>
+          <p><strong>加粗:</strong> 内容</p>
+        </div>
+      </section>
+
+      <section class="collapsible-section">
+        <div class="collapsible-item">
+          <button class="collapsible-header"><span>白色折叠栏一号</span></button>
+          <div class="collapsible-content">
+            <p>这里什么都没有</p>
+          </div>
+        </div>
+        <div class="collapsible-item">
+          <button class="collapsible-header"><span>白色折叠栏二号</span></button>
+          <div class="collapsible-content">
+            <p>这里也什么都没有</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Optional: Music Player A -->
+      <div class="music-player" id="player-a">
+        <audio id="audio-a" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+        <!-- Placeholder Light Music -->
+        <div class="player-song-info">
+          <span class="player-title">白色主题的音乐播放器</span>
+          <span class="player-artist">这里其实不用改</span>
+        </div>
+        <div class="player-progress-area">
+          <div class="player-time">
+            <span class="current-time">0:00</span>
+            <span class="total-time">0:00</span>
+          </div>
+          <div class="player-progress-bar">
+            <div class="player-progress-fill"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="player-btn player-prev" data-player="a" aria-label="上一首">«</button> <!-- 上一首 -->
+          <button class="player-btn player-play-pause" data-player="a" aria-label="播放/暂停">▶</button> <!-- 播放/暂停 -->
+          <button class="player-btn player-next" data-player="a" aria-label="下一首">»</button> <!-- 下一首 -->
+          <button class="player-btn player-loop" data-player="a" aria-label="循环">循</button> <!-- 循环 -->
+        </div>
+        <div class="lyrics-container" id="lyrics-a">
+          <div class="lyrics-scroll-content">
+            <div class="lyric-line">去下面Script部分改</div>
+          </div>
+        </div>
+        <audio id="audio-a" src="..."></audio>
+      </div>
+
+    </div>
+
+    <!-- Page B Content (Dark/Racing) -->
+    <div id="page-b" class="page-content">
+
+      <section class="announcement-box">
+        <h3 class="announcement-title">这是标题</h3>
+        <div class="announcement-content">
+          <p>这是内容</p>
+        </div>
+      </section>
+      
+      <section class="profile-section">
+        <div class="profile-image-container">
+          <!-- Different image for the racer persona -->
+          <img src="https://img.picgo.net/2025/04/25/2025-04-25T10.08.26_1b72efa0b9d84c61b.jpg" alt="Viper赛车手照片" class="profile-image">
+        </div>
+        <div class="profile-info">
+          <h2>人名</h2>
+          <p><strong>加粗</strong>内容</p>
+          </p>
+        </div>
+      </section>
+
+      <section class="collapsible-section">
+        <div class="collapsible-item">
+          <button class="collapsible-header"><span>黑色折叠栏一号</span></button>
+          <div class="collapsible-content">
+            <p>你不会真的以为这里会有东西吧（）</p>
+          </div>
+        </div>
+        <div class="collapsible-item">
+          <button class="collapsible-header"><span>黑色折叠栏二号</span></button>
+          <div class="collapsible-content">
+            <p>真的没有，别看了</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Optional: Music Player B -->
+      <div class="music-player" id="player-b">
+        <audio id="audio-b" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+        <!-- Placeholder Racing Music -->
+        <div class="player-song-info">
+          <span class="player-title">午夜狂飙</span>
+          <span class="player-artist">电子脉冲</span>
+        </div>
+        <div class="player-progress-area">
+          <div class="player-time">
+            <span class="current-time">0:00</span>
+            <span class="total-time">0:00</span>
+          </div>
+          <div class="player-progress-bar">
+            <div class="player-progress-fill"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="player-btn player-prev" data-player="a" aria-label="上一首">«</button> <!-- 上一首 -->
+          <button class="player-btn player-play-pause" data-player="a" aria-label="播放/暂停">▶</button> <!-- 播放/暂停 -->
+          <button class="player-btn player-next" data-player="a" aria-label="下一首">»</button> <!-- 下一首 -->
+          <button class="player-btn player-loop" data-player="a" aria-label="循环">循</button> <!-- 循环 -->
+        </div>
+        <div class="lyrics-container" id="lyrics-b">
+          <div class="lyrics-scroll-content">
+            <div class="lyric-line">引擎待命...</div>
+          </div>
+        </div>
+        <audio id="audio-b" src="..."></audio>
+      </div>
+
+    </div>
+
+  </div> <!-- End profile-wrapper -->
+
+  <script>
+    // --- 确保所有交互逻辑在 DOM 加载后执行 ---
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- Debounced Resize Event Dispatcher for iframe ---
+      let resizeTimeout;
+      function requestHeightUpdate() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // console.log('Dispatching resize for iframe height update.');
+          window.dispatchEvent(new Event('resize'));
+        }, 350); // Debounce delay
+      }
+
+      // --- 页面加载和图片加载后触发高度更新 ---
+      // (移到 DOMContentLoaded 内部确保 bodyElement 等已定义)
+      window.addEventListener('load', requestHeightUpdate);
+      document.querySelectorAll('img').forEach(img => {
+        const handleLoadOrError = () => {
+          requestHeightUpdate();
+          img.removeEventListener('load', handleLoadOrError);
+          img.removeEventListener('error', handleLoadOrError);
+        };
+        if (!img.complete) {
+          img.addEventListener('load', handleLoadOrError);
+          img.addEventListener('error', handleLoadOrError);
+        }
+        // 对于已完成的图片，可以在 'load' 事件中统一处理
+      });
+
+      // --- Theme and Page Switching ---
+      (function () { // 使用 IIFE 封装主题切换逻辑
+        const switchButton = document.getElementById('theme-switch');
+        const pageA = document.getElementById('page-a');
+        const pageB = document.getElementById('page-b');
+        const bodyElement = document.body;
+        // 获取 audio 元素的引用，用于暂停
+        const audioA = document.getElementById('audio-a');
+        const audioB = document.getElementById('audio-b');
+
+        if (!switchButton || !pageA || !pageB || !bodyElement) {
+          console.error("Theme switch button or page elements not found!");
+          return;
+        }
+
+        function switchThemeAndPage() {
+          const isLightTheme = bodyElement.classList.contains('theme-light');
+
+          // --- Stop any playing audio ---
+          let pausedPlayerId = null; // 记录哪个播放器被暂停了
+          if (audioA && !audioA.paused) {
+            audioA.pause();
+            pausedPlayerId = 'a';
+          } else if (audioB && !audioB.paused) {
+            audioB.pause();
+            pausedPlayerId = 'b';
+          }
+          // 重置对应按钮图标 (如果需要显式重置)
+          if (pausedPlayerId) {
+            const pausedPlayBtn = document.querySelector(`.player-play-pause[data-player="${pausedPlayerId}"]`);
+            if (pausedPlayBtn) pausedPlayBtn.textContent = '▶';
+          }
+
+
+          // --- Switch Theme ---
+          if (isLightTheme) {
+            bodyElement.classList.remove('theme-light');
+            bodyElement.classList.add('theme-dark');
+            pageA.classList.remove('active');
+            pageB.classList.add('active');
+            switchButton.textContent = '切换到白色主题';
+          } else {
+            bodyElement.classList.remove('theme-dark');
+            bodyElement.classList.add('theme-light');
+            pageB.classList.remove('active');
+            pageA.classList.add('active');
+            switchButton.textContent = '切换到黑色主题';
+          }
+          requestHeightUpdate(); // Trigger height update after switch
+        }
+        switchButton.addEventListener('click', switchThemeAndPage);
+      })();
+
+
+      // --- Collapsible/Accordion Logic (Auto-Collapse) ---
+      (function () { // 使用 IIFE 封装折叠栏逻辑
+        const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+        let activeCollapsible = null; // 追踪当前打开的折叠栏按钮
+
+        // 关闭当前激活的折叠栏 (保持不变)
+        function closeActiveCollapsible() {
+          if (activeCollapsible) {
+            const activeContent = activeCollapsible.nextElementSibling;
+            activeCollapsible.classList.remove('active');
+            // 确保 activeContent 存在且是 .collapsible-content
+            if (activeContent && activeContent.classList.contains('collapsible-content')) {
+              activeContent.style.maxHeight = null;
+              activeContent.classList.remove('show');
+            } else {
+              console.warn("Could not find active content to close for:", activeCollapsible);
+            }
+          }
+        }
+
+        collapsibleHeaders.forEach(header => {
+          header.addEventListener('click', function () {
+            const content = this.nextElementSibling;
+            if (!content || !content.classList.contains('collapsible-content')) {
+              console.error("Collapsible content not found for header:", this);
+              return;
+            }
+            const isAlreadyActive = this === activeCollapsible;
+
+            // 先关闭其他的（如果需要打开新的）
+            if (activeCollapsible && !isAlreadyActive) {
+              closeActiveCollapsible();
+            }
+
+            // 切换当前点击的
+            if (isAlreadyActive) {
+              this.classList.remove('active');
+              content.style.maxHeight = null;
+              content.classList.remove('show'); // 移除 show 类以移除 padding
+              activeCollapsible = null;
+            } else {
+              this.classList.add('active');
+              content.classList.remove('show'); // 先移除 show 以正确计算 scrollHeight
+              const buffer = 15; // 保持 buffer
+
+              // --- 确保 scrollHeight 计算准确 ---
+              // 在设置 max-height 前，强制浏览器重新计算布局可能有助于获取准确值
+              // content.style.display = 'block'; // 临时设为 block (如果之前是 none) - 但我们是用 max-height 控制的，这步可能不需要
+              // void content.offsetWidth; // 强制重绘/回流
+
+              const requiredHeight = content.scrollHeight + buffer;
+              content.style.maxHeight = requiredHeight + 'px';
+
+              // 延迟添加 show 类以触发 padding 动画
+              // 这个 timeout 对于 max-height 动画不是必须的，但对 padding 动画是
+              setTimeout(() => {
+                content.classList.add('show');
+              }, 10); // 短暂延迟，确保 max-height 动画开始
+
+              activeCollapsible = this;
+            }
+            requestHeightUpdate(); // 触发高度更新
+          });
+
+          // --- 初始化状态 ---
+          // 确保页面加载时，非 active 的内容是折叠的
+          const content = header.nextElementSibling;
+          if (content && content.classList.contains('collapsible-content') && !header.classList.contains('active')) {
+            content.style.maxHeight = null; // 确保关闭
+            content.classList.remove('show');
+          } else if (content && content.classList.contains('collapsible-content') && header.classList.contains('active')) {
+            // 如果某个折叠栏默认是 active 的，确保它展开
+            const buffer = 15;
+            content.style.maxHeight = content.scrollHeight + buffer + 'px';
+            content.classList.add('show');
+            activeCollapsible = header; // 记录初始打开项
+          }
+
+        });
+      })();
+
+
+      // --- Optional Music Player Logic ---
+      
+       (function () {
+        /**
+         * Manages multiple independent music players with individual playlists and bilingual lyrics.
+         */
+
+        // --- Player Data Structure (Keep as is) ---
+        const players = {
+          'a': { // Player ID 'a' (Light Theme)
+            id: 'a',
+            container: document.getElementById('player-a'),
+            audioElement: document.getElementById('audio-a'),
+            playPauseBtn: null, prevBtn: null, nextBtn: null, loopBtn: null,
+            progressFill: null, progressContainer: null, currentTimeEl: null, totalTimeEl: null,
+            titleEl: null, artistEl: null,
+            lyricsContainer: document.getElementById('lyrics-a'),
+            lyricsScrollContent: null,
+            songs: [ // Example songs for player A (using '/' separator if needed)
+              { title: "白色主题播放器", 
+                artist: "去Script部分改", 
+                src: "", 
+                lrc: `[00:00.00]这里填歌词` 
+              },
+              { title: "还是白色主题播放器", 
+                artist: "去哪改不用我说了吧", 
+                src: "", 
+                lrc: `[00:00.00]这里还是歌词` 
+              },
+            ],
+            currentSongIndex: 0, isPlaying: false, isLooping: false,
+            parsedLyrics: [], currentLyricIndex: -1, _updateTotalTimeHandler: null
+          },
+          'b': { // Player ID 'b' (Dark Theme)
+            id: 'b',
+            container: document.getElementById('player-b'),
+            audioElement: document.getElementById('audio-b'),
+            playPauseBtn: null, prevBtn: null, nextBtn: null, loopBtn: null,
+            progressFill: null, progressContainer: null, currentTimeEl: null, totalTimeEl: null,
+            titleEl: null, artistEl: null,
+            lyricsContainer: document.getElementById('lyrics-b'),
+            lyricsScrollContent: null,
+            songs: [ // Example songs for player B (using '/' separator)
+              {
+                title: "黑色主题播放器", 
+                artist: "两个主题的播放器内容是独立的", 
+                src: "", 
+                lrc: `[00:00.00]歌词支持纯中文、中日、中英双语` },
+              {
+                title: "黑色主题播放器", 
+                artist: "能交代的我都交代了", 
+                src: "", 
+                lrc: `
+                      [00:00.00]按键切换文本也记得要在Script部分里修改` }
+            ],
+            currentSongIndex: 0, isPlaying: false, isLooping: false,
+            parsedLyrics: [], currentLyricIndex: -1, _updateTotalTimeHandler: null
+          }
+        };
+
+        // --- Helper: Query elements ---
+        function queryPlayerElements(playerState) { /* ... (保持不变) ... */
+          if (!playerState || !playerState.container) return false;
+          playerState.playPauseBtn = playerState.container.querySelector('.player-play-pause');
+          playerState.prevBtn = playerState.container.querySelector('.player-prev');
+          playerState.nextBtn = playerState.container.querySelector('.player-next');
+          playerState.loopBtn = playerState.container.querySelector('.player-loop');
+          playerState.progressFill = playerState.container.querySelector('.player-progress-fill');
+          playerState.progressContainer = playerState.container.querySelector('.player-progress-bar');
+          playerState.currentTimeEl = playerState.container.querySelector('.current-time');
+          playerState.totalTimeEl = playerState.container.querySelector('.total-time');
+          playerState.titleEl = playerState.container.querySelector('.player-title');
+          playerState.artistEl = playerState.container.querySelector('.player-artist');
+          playerState.lyricsScrollContent = playerState.lyricsContainer ? playerState.lyricsContainer.querySelector('.lyrics-scroll-content') : null; // Corrected typo
+
+          if (!playerState.audioElement || !playerState.playPauseBtn || !playerState.progressContainer || !playerState.progressFill || !playerState.lyricsContainer || !playerState.lyricsScrollContent) {
+            console.error(`Essential elements missing for player ${playerState.id}. Playback/Lyrics might not work.`);
+            return false;
+          }
+          return true;
+        }
+
+        // --- Utility Functions ---
+        function formatTime(secs) { /* ... (保持不变) ... */
+          if (isNaN(secs) || secs < 0) return '0:00';
+          const minutes = Math.floor(secs / 60);
+          const seconds = Math.floor(secs % 60);
+          return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // --- NEW LRC Parser (Based on the example) ---
+        function parseLRC(lrcText) {
+          if (!lrcText || typeof lrcText !== 'string') return [];
+          const lines = lrcText.split('\n');
+          const result = [];
+          const timeRegex = /\[(\d{2,}):(\d{2})(?:[.:](\d{1,3}))?\]/g; // Regex for time tags
+          const metaTagRegex = /\[(ti|ar|al|by|offset):(.*?)\]/i; // Regex for meta tags
+
+          lines.forEach(line => {
+            const trimmedLine = line.trim();
+            // Skip empty lines and meta tags (can be parsed if needed)
+            if (trimmedLine === '' || metaTagRegex.test(trimmedLine)) {
+              return;
+            }
+
+            let lineText = trimmedLine;
+            const timeMatches = [...trimmedLine.matchAll(timeRegex)];
+            let time = 0; // Default time if somehow no tag is found but text exists
+
+            if (timeMatches.length > 0) {
+              // Use the time from the first tag on the line as the primary time
+              const firstMatch = timeMatches[0];
+              const minutes = parseInt(firstMatch[1], 10);
+              const seconds = parseInt(firstMatch[2], 10);
+              const milliseconds = firstMatch[3] ? parseInt(firstMatch[3].padEnd(3, '0'), 10) : 0;
+              if (!isNaN(minutes) && !isNaN(seconds)) {
+                time = minutes * 60 + seconds + milliseconds / 1000;
+              }
+
+              // Get text after the last time tag on the line
+              const lastMatch = timeMatches[timeMatches.length - 1];
+              lineText = trimmedLine.substring(lastMatch.index + lastMatch[0].length).trim();
+            } else {
+              // If no time tag, maybe treat the whole line as text at time 0 or skip?
+              // For now, we skip lines without time tags based on the earlier check.
+              return;
+            }
+
+
+            if (lineText) { // Only add if there's actual text content
+              // Attempt to split by '/' to get Lang1 / Lang2
+              const parts = lineText.split('/').map(t => t.trim());
+              const lang1 = parts[0] || ''; // First language part (e.g., English/Japanese)
+              // Second language part (e.g., Chinese). If no '/', use lang1. If only '/', lang2 is empty.
+              const lang2 = (parts.length > 1) ? (parts[1] || '') : lang1;
+              // If lang2 ended up being the same as lang1 because there was no '/' or only one part,
+              // check if we should clear lang1 to avoid duplication if only one language is present.
+              // This assumes lang1 is the 'secondary' if lang2 exists, or the only one if lang2 is empty/same.
+              // Alternatively, decide which span to prioritize based on content.
+              // Let's stick to the example's simple logic first: lang1 is before '/', lang2 is after or defaults to lang1.
+              // We might need more sophisticated language detection later if required.
+
+              result.push({ time, lang1: lang1, lang2: lang2 }); // Store both parts
+            }
+          });
+
+          return result.sort((a, b) => a.time - b.time);
+        }
+
+
+        // --- NEW Render Lyrics (Based on the example's structure) ---
+        function renderLyrics(playerId) {
+          const playerState = players[playerId];
+          if (!playerState || !playerState.lyricsContainer || !playerState.lyricsScrollContent) return;
+
+          const scrollContent = playerState.lyricsScrollContent;
+          scrollContent.innerHTML = ''; // Clear old
+          scrollContent.style.transform = 'translateY(0px)';
+          playerState.currentLyricIndex = -1; // Reset index
+
+          if (!playerState.parsedLyrics || playerState.parsedLyrics.length === 0) {
+            scrollContent.innerHTML = '<div class="lyric-line" style="opacity: 0.7;">暂无歌词</div>';
+            return;
+          }
+
+          playerState.parsedLyrics.forEach((line, index) => {
+            const div = document.createElement('div');
+            div.classList.add('lyric-line');
+            div.dataset.index = index;
+            div.dataset.time = line.time;
+
+            // Conditionally add spans for each language part
+            // Using class names similar to the second example (jpn/chn)
+            // IMPORTANT: Ensure your CSS matches these class names!
+            if (line.lang1) {
+              const span1 = document.createElement('span');
+              span1.className = 'lyric-jpn'; // Or 'lyric-lang1'
+              span1.textContent = line.lang1;
+              div.appendChild(span1);
+            }
+            if (line.lang2 && line.lang2 !== line.lang1) { // Only add lang2 if different from lang1
+              const span2 = document.createElement('span');
+              span2.className = 'lyric-chn'; // Or 'lyric-lang2'
+              span2.textContent = line.lang2;
+              div.appendChild(span2);
+            } else if (line.lang2 && line.lang2 === line.lang1 && !line.lang1) {
+              // Handle cases like "[00:00.00] / Chinese Only" - unlikely with current parse logic but safe
+              const span2 = document.createElement('span');
+              span2.className = 'lyric-chn';
+              span2.textContent = line.lang2;
+              div.appendChild(span2);
+            } else if (!line.lang2 && !line.lang1) {
+              // Handle cases where parsing might yield empty parts, add placeholder?
+              // div.innerHTML = ' '; // Add a non-breaking space maybe
+            }
+
+
+            // Only append if the div has actual content
+            if (div.hasChildNodes()) {
+              scrollContent.appendChild(div);
+            }
+          });
+        }
+
+
+        // --- Player Control Functions (loadSong needs update, rest mostly ok) ---
+        function loadSong(playerId, songIndex) { // Updated loadSong
+          const playerState = players[playerId];
+          if (!playerState || songIndex < 0 || songIndex >= playerState.songs.length) {
+            console.error(`Cannot load song for player ${playerId}, index ${songIndex}`);
+            return;
+          }
+          // Pause current before loading new
+          if (playerState.isPlaying) {
+            pauseAudio(playerId);
+          }
+
+          const song = playerState.songs[songIndex];
+          playerState.currentSongIndex = songIndex;
+
+          if (playerState.titleEl) playerState.titleEl.textContent = song.title;
+          if (playerState.artistEl) playerState.artistEl.textContent = song.artist;
+          if (playerState.audioElement) playerState.audioElement.src = song.src;
+
+          // *** Call the NEW parseLRC ***
+          playerState.parsedLyrics = parseLRC(song.lrc);
+          // *** Call the NEW renderLyrics ***
+          renderLyrics(playerId);
+
+          resetPlayerUI(playerId); // Reset UI elements
+
+          if (playerState.audioElement) {
+            const updateTotalTimeHandler = () => displayTotalTime(playerId);
+            playerState.audioElement.removeEventListener('loadedmetadata', playerState._updateTotalTimeHandler);
+            playerState.audioElement.addEventListener('loadedmetadata', updateTotalTimeHandler, { once: true });
+            playerState._updateTotalTimeHandler = updateTotalTimeHandler;
+          }
+        }
+
+        // (resetPlayerUI, displayTotalTime, playAudio, pauseAudio, togglePlayPause,
+        //  nextSong, prevSong, toggleLoop, setVolume, setProgress remain the same as the previous version)
+        function resetPlayerUI(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState) return;
+          if (playerState.progressFill) playerState.progressFill.style.width = '0%';
+          if (playerState.currentTimeEl) playerState.currentTimeEl.textContent = '0:00';
+          if (playerState.totalTimeEl) playerState.totalTimeEl.textContent = '0:00';
+          if (playerState.playPauseBtn) playerState.playPauseBtn.textContent = '▶';
+          playerState.isPlaying = false;
+          playerState.currentLyricIndex = -1; // Reset lyric index
+          if (playerState.lyricsScrollContent) { // Reset scroll and highlight
+            const activeLyric = playerState.lyricsScrollContent.querySelector('.active');
+            if (activeLyric) activeLyric.classList.remove('active');
+            playerState.lyricsScrollContent.style.transform = `translateY(0px)`;
+          }
+        }
+        function displayTotalTime(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (playerState && playerState.audioElement && !isNaN(playerState.audioElement.duration)) {
+            if (playerState.totalTimeEl) playerState.totalTimeEl.textContent = formatTime(playerState.audioElement.duration);
+          } else {
+            if (playerState && playerState.totalTimeEl) playerState.totalTimeEl.textContent = '0:00';
+          }
+        }
+        function playAudio(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.audioElement || !playerState.audioElement.src) return;
+          Object.keys(players).forEach(id => {
+            if (id !== playerId && players[id].isPlaying) { pauseAudio(id); }
+          });
+          playerState.audioElement.play().then(() => {
+            playerState.isPlaying = true;
+            if (playerState.playPauseBtn) playerState.playPauseBtn.textContent = '❚❚';
+          }).catch(e => {
+            console.error(`Error playing audio for ${playerId}:`, e);
+            playerState.isPlaying = false;
+            if (playerState.playPauseBtn) playerState.playPauseBtn.textContent = '▶';
+          });
+        }
+        function pauseAudio(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.audioElement) return;
+          playerState.audioElement.pause();
+          playerState.isPlaying = false;
+          if (playerState.playPauseBtn) playerState.playPauseBtn.textContent = '▶';
+        }
+        function togglePlayPause(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState) return;
+          if (playerState.isPlaying) pauseAudio(playerId); else playAudio(playerId);
+        }
+        function nextSong(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState) return;
+          let newIndex = (playerState.currentSongIndex + 1) % playerState.songs.length;
+          loadSong(playerId, newIndex);
+          playAudio(playerId);
+        }
+        function prevSong(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState) return;
+          let newIndex = (playerState.currentSongIndex - 1 + playerState.songs.length) % playerState.songs.length;
+          loadSong(playerId, newIndex);
+          playAudio(playerId);
+        }
+        function toggleLoop(playerId) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.audioElement) return;
+          playerState.isLooping = !playerState.isLooping;
+          playerState.audioElement.loop = playerState.isLooping;
+          if (playerState.loopBtn) {
+            playerState.loopBtn.classList.toggle('active', playerState.isLooping);
+          }
+        }
+        function setVolume(playerId, volume) { /* ... (Assuming volume slider exists) ... */
+          const playerState = players[playerId];
+          const volumeSlider = playerState.container.querySelector('.player-volume'); // Example
+          if (playerState && playerState.audioElement && volumeSlider) {
+            let volValue = parseFloat(volume);
+            if (isNaN(volValue)) volValue = 1;
+            playerState.audioElement.volume = Math.max(0, Math.min(1, volValue));
+          } else if (playerState && playerState.audioElement) {
+            playerState.audioElement.volume = 1; // Default if slider missing
+          }
+        }
+        function setProgress(playerId, event) { /* ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.audioElement || !playerState.progressContainer || !playerState.audioElement.duration || isNaN(playerState.audioElement.duration)) return;
+          const progressBarElement = event.currentTarget;
+          const rect = progressBarElement.getBoundingClientRect();
+          const clickX = event.clientX - rect.left;
+          const width = progressBarElement.clientWidth;
+          if (width > 0) {
+            playerState.audioElement.currentTime = (clickX / width) * playerState.audioElement.duration;
+          }
+        }
+
+        // --- UI Update Functions ---
+        function updateProgressUI(playerId) { /* ... (Keep as is) ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.audioElement || !playerState.audioElement.duration || isNaN(playerState.audioElement.duration)) return;
+          const { currentTime, duration } = playerState.audioElement;
+          const progressPercent = (currentTime / duration) * 100;
+          if (playerState.progressFill) playerState.progressFill.style.width = `${Math.min(100, Math.max(0, progressPercent))}%`;
+          if (playerState.currentTimeEl) playerState.currentTimeEl.textContent = formatTime(currentTime);
+          if (playerState.totalTimeEl && (playerState.totalTimeEl.textContent === '0:00' || playerState.totalTimeEl.textContent === 'NaN:NaN')) { displayTotalTime(playerId); }
+          if (playerState.isPlaying) { updateLyricsUI(playerId, currentTime); }
+        }
+
+        // --- Lyrics Rendering and Scrolling (Keep as is, uses new renderLyrics) ---
+        function updateLyricsUI(playerId, currentTime) { /* ... (Keep as is) ... */
+          const playerState = players[playerId];
+          if (!playerState || !playerState.lyricsContainer || !playerState.lyricsScrollContent || !playerState.parsedLyrics || playerState.parsedLyrics.length === 0) return;
+          let newIndex = -1;
+          for (let i = 0; i < playerState.parsedLyrics.length; i++) {
+            if (currentTime >= playerState.parsedLyrics[i].time - 0.2) { newIndex = i; } else { break; }
+          }
+          if (newIndex !== playerState.currentLyricIndex) {
+            const lines = playerState.lyricsScrollContent.querySelectorAll('.lyric-line');
+            const previousLine = playerState.lyricsScrollContent.querySelector(`.lyric-line[data-index="${playerState.currentLyricIndex}"]`);
+            if (previousLine) previousLine.classList.remove('active');
+            const currentLine = playerState.lyricsScrollContent.querySelector(`.lyric-line[data-index="${newIndex}"]`);
+            if (currentLine) {
+              currentLine.classList.add('active');
+              scrollToActiveLyric(playerState.lyricsContainer, playerState.lyricsScrollContent, currentLine);
+            }
+            playerState.currentLyricIndex = newIndex;
+          }
+        }
+        function scrollToActiveLyric(containerEl, scrollContentEl, activeLine) { /* ... (Keep as is) ... */
+          if (!containerEl || !scrollContentEl || !activeLine) return;
+          const boxHeight = containerEl.clientHeight;
+          const scrollTarget = activeLine.offsetTop - (boxHeight / 2) + (activeLine.clientHeight / 2);
+          scrollContentEl.style.transform = `translateY(-${Math.max(0, scrollTarget)}px)`;
+        }
+
+        // --- Initialize All Players ---
+        Object.keys(players).forEach(playerId => { /* ... (Keep initialization loop as is) ... */
+          const playerState = players[playerId];
+          if (queryPlayerElements(playerState)) {
+            loadSong(playerId, playerState.currentSongIndex);
+            playerState.playPauseBtn.addEventListener('click', () => togglePlayPause(playerId));
+            if (playerState.prevBtn) playerState.prevBtn.addEventListener('click', () => prevSong(playerId));
+            if (playerState.nextBtn) playerState.nextBtn.addEventListener('click', () => nextSong(playerId));
+            if (playerState.loopBtn) playerState.loopBtn.addEventListener('click', () => toggleLoop(playerId));
+            playerState.progressContainer.addEventListener('click', (e) => setProgress(playerId, e));
+            playerState.audioElement.addEventListener('timeupdate', () => updateProgressUI(playerId));
+            playerState.audioElement.addEventListener('ended', () => {
+              if (!playerState.isLooping) { nextSong(playerId); }
+              else { setTimeout(() => { playerState.currentLyricIndex = -1; updateLyricsUI(playerId, 0); if (playerState.lyricsScrollContent) playerState.lyricsScrollContent.style.transform = 'translateY(0px)'; }, 50); }
+            });
+            const volumeSlider = playerState.container.querySelector('.player-volume'); // Adjust selector if needed
+            if (volumeSlider) {
+              playerState.audioElement.volume = parseFloat(volumeSlider.value) || 1;
+              volumeSlider.addEventListener('input', (e) => setVolume(playerId, parseFloat(e.target.value)));
+            } else { playerState.audioElement.volume = 1; }
+            if (playerState.audioElement.readyState >= 1) { displayTotalTime(playerId); }
+          } else { console.warn(`Skipping initialization for player ${playerId} due to missing elements.`); }
+        });
+
+      })(); // End Universal Music Player IIFE
+      
+
+    }); // End DOMContentLoaded
+  </script>
+
+</body>
+
+</html>
