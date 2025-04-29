@@ -4,6 +4,8 @@
 
 来都来了给颗星星再走吧QAQ
 
+### 广告位，点击即达→[关于网恋前男友在冠军领奖台上求复合这件事](https://chat.mufy.ai/chat?roleId=224cd18f-73bb-4257-90e2-4357b7803b3e)
+
 <details>
 <summary>历史更新记录</summary>
 
